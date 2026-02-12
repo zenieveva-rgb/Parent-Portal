@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
 import { getDatabase, ref, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
 
-// Firebase Config
 const firebaseConfig = {
     apiKey: "AIzaSyBdlEvDlQ1qWr8xdL4bV25NW4RgcTajYqM",
     authDomain: "database-98a70.firebaseapp.com",
@@ -15,40 +14,31 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Event Listener para sa Button
-document.getElementById('searchBtn').addEventListener('click', () => {
+document.getElementById('searchBtn').onclick = () => {
     const lrn = document.getElementById('lrnInput').value.trim();
-    const resultsDiv = document.getElementById('results');
-    
-    if (!lrn) {
-        alert("Please enter an LRN");
-        return;
-    }
+    const table = document.getElementById('attendanceTable');
 
-    resultsDiv.innerHTML = '<p style="opacity:0.5;">Searching...</p>';
+    if(!lrn) return alert("Enter LRN");
 
-    const attendanceRef = ref(db, 'attendance');
-    const lrnQuery = query(attendanceRef, orderByChild('lrn'), equalTo(lrn));
+    const attRef = query(ref(db, 'attendance'), orderByChild('lrn'), equalTo(lrn));
 
-    onValue(lrnQuery, (snapshot) => {
+    onValue(attRef, (snapshot) => {
         const data = snapshot.val();
-        resultsDiv.innerHTML = '';
+        table.innerHTML = ''; // Clear previous
 
-        if (data) {
-            const logs = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
-            resultsDiv.innerHTML = `<p style="font-weight:bold; margin-top:20px;">Student: ${logs[0].displayName}</p>`;
-            
-            logs.forEach(log => {
-                const date = new Date(log.timestamp).toLocaleString();
-                resultsDiv.innerHTML += `
-                    <div class="log-item">
-                        <span class="status">● PRESENT</span><br>
-                        <span>${date}</span>
+        if(data) {
+            Object.values(data).forEach(log => {
+                const time = new Date(log.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                table.innerHTML += `
+                    <div class="attendance-row">
+                        <span>${log.displayName}</span>
+                        <span>${log.grade || 'N/A'}</span>
+                        <span>${time}</span>
                     </div>
                 `;
             });
         } else {
-            resultsDiv.innerHTML = '<p style="color:#ff4d4d; margin-top:20px;">No record found.</p>';
+            table.innerHTML = '<p style="text-align:center; font-size:12px; color:red;">No record found.</p>';
         }
     });
-});
+};
