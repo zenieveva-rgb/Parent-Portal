@@ -7,11 +7,10 @@ body, html {
     margin: 0;
     padding: 0;
     height: 100%;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: white;
+    font-family: 'Segoe UI', sans-serif;
+    background: #121212;
 }
 
-/* Background setup */
 .page-background {
     height: 100vh;
     display: flex;
@@ -22,7 +21,6 @@ body, html {
     background-size: cover;
 }
 
-/* Glass Card Container */
 .main-container {
     width: 95%;
     max-width: 450px;
@@ -35,25 +33,22 @@ body, html {
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 0 30px rgba(0, 229, 255, 0.2);
 }
 
 .portal-title {
     text-align: center;
+    color: white;
     font-size: 1.5rem;
-    letter-spacing: 2px;
     margin-bottom: 20px;
     text-shadow: 0 0 10px var(--neon-cyan);
 }
 
-/* Search Input */
 .search-box {
     display: flex;
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 10px 15px;
-    margin-bottom: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 15px;
 }
 
 #nameInput {
@@ -62,59 +57,35 @@ body, html {
     border: none;
     color: white;
     outline: none;
-    font-size: 14px;
 }
 
-#searchBtn {
-    color: var(--neon-cyan);
-    cursor: pointer;
-}
-
-/* Formal Grid Header */
 .table-header {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr; /* 3-column layout */
+    grid-template-columns: 2fr 1fr 1fr;
     background: rgba(0, 229, 255, 0.2);
     padding: 12px 10px;
-    border-radius: 8px 8px 0 0;
+    color: var(--neon-cyan);
     font-weight: bold;
     font-size: 11px;
-    color: var(--neon-cyan);
+    border-radius: 5px 5px 0 0;
 }
 
 .attendance-list {
     flex: 1;
     overflow-y: auto;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 0 0 8px 8px;
+    background: rgba(0,0,0,0.2);
 }
 
-/* Attendance Row (Dapat match sa Grid ng Header) */
 .attendance-row {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr; /* 3-column layout */
+    grid-template-columns: 2fr 1fr 1fr;
     padding: 15px 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    align-items: center;
+    color: white;
     font-size: 13px;
+    align-items: center;
 }
 
-.col-name { 
-    text-transform: uppercase; 
-    font-weight: 500; 
-}
-
-.col-grade { 
-    text-align: center; 
-    color: #569DAA; 
-}
-
-.col-time { 
-    text-align: right; 
-    color: var(--neon-cyan); 
-    font-family: monospace; 
-}
-
-/* Custom Scrollbar */
-.attendance-list::-webkit-scrollbar { width: 4px; }
-.attendance-list::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 10px; }
+.col-name { text-transform: uppercase; font-weight: 500; }
+.col-grade { text-align: center; color: #569DAA; }
+.col-time { text-align: right; color: var(--neon-cyan); }
