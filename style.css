@@ -1,22 +1,23 @@
 :root {
-    --neon-cyan: #00E5FF;
+    --neon: #00E5FF;
     --glass: rgba(255, 255, 255, 0.1);
 }
 
-body {
+body, html {
     margin: 0;
     padding: 0;
+    height: 100%;
     font-family: 'Segoe UI', sans-serif;
-    background: #1a1a1a; /* Background color kung wala pang image */
+    color: white;
 }
 
-/* Wrapper para sa full background image */
-.main-wrapper {
+.page-background {
     height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('image/login.png') no-repeat center center fixed;
+    /* Palitan ang URL kung may sarili kang image */
+    background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('image/login.png') no-repeat center center fixed;
     background-size: cover;
 }
 
@@ -26,30 +27,27 @@ body {
     height: 80vh;
     background: var(--glass);
     backdrop-filter: blur(15px);
-    border: 2px solid var(--neon-cyan);
+    border: 2px solid var(--neon);
     border-radius: 20px;
-    padding: 20px;
+    padding: 25px;
+    box-shadow: 0 0 25px rgba(0, 229, 255, 0.2);
     display: flex;
     flex-direction: column;
-    box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
 }
 
-.neon-title {
-    color: white;
+.portal-title {
     text-align: center;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     margin-bottom: 20px;
-    text-shadow: 0 0 10px var(--neon-cyan);
+    text-shadow: 0 0 10px var(--neon);
 }
 
-/* Search Bar */
-.search-wrapper {
+.search-box {
     display: flex;
     background: rgba(255, 255, 255, 0.15);
     border-radius: 10px;
-    padding: 5px 15px;
-    margin-bottom: 15px;
-    align-items: center;
+    padding: 8px 15px;
+    margin-bottom: 20px;
 }
 
 #nameInput {
@@ -57,38 +55,37 @@ body {
     background: transparent;
     border: none;
     color: white;
-    padding: 10px;
     outline: none;
 }
 
-/* Table Format */
+/* Formal Table Header */
 .table-header {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-columns: 2fr 1fr 1fr; /* Pantay na columns */
     background: rgba(0, 229, 255, 0.2);
-    padding: 10px;
-    border-radius: 5px;
-    color: var(--neon-cyan);
+    padding: 12px 10px;
+    border-radius: 8px 8px 0 0;
     font-weight: bold;
-    font-size: 11px;
-    margin-bottom: 5px;
+    font-size: 12px;
+    color: var(--neon);
 }
 
-.scroll-area {
+.attendance-list {
     flex: 1;
     overflow-y: auto;
+    border-radius: 0 0 8px 8px;
 }
 
+/* Row Format para sa bawat bata */
 .attendance-row {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
-    padding: 12px 10px;
+    grid-template-columns: 2fr 1fr 1fr; /* Dapat match sa header */
+    padding: 15px 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    color: white;
-    font-size: 13px;
     align-items: center;
+    font-size: 13px;
 }
 
 .col-name { text-transform: uppercase; font-weight: 500; }
 .col-grade { text-align: center; color: #569DAA; }
-.col-time { text-align: right; color: var(--neon-cyan); }
+.col-time { text-align: right; color: var(--neon); font-family: monospace; }
