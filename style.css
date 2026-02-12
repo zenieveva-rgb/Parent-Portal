@@ -1,17 +1,15 @@
 :root {
+    --tech-dark: #0B141A;
+    --tech-blue: #569DAA;
+    --glass-white: rgba(255, 255, 255, 0.12);
     --neon-cyan: #00E5FF;
-    --glass-bg: rgba(255, 255, 255, 0.1);
-    --overlay: rgba(0, 0, 0, 0.5); /* Eto yung #80000000 sa code mo */
 }
 
 body {
     margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    /* Palitan ang URL ng image/bg_main.png mo */
-    background: linear-gradient(var(--overlay), var(--overlay)), 
-                url('image/login.png') no-repeat center center fixed;
-    background-size: cover;
+    font-family: 'Segoe UI', sans-serif;
+    background: var(--tech-dark);
+    color: white;
     height: 100vh;
     display: flex;
     justify-content: center;
@@ -22,66 +20,75 @@ body {
     width: 90%;
     max-width: 400px;
     height: 80vh;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--glass-white);
     backdrop-filter: blur(15px);
-    border: 1px solid rgba(0, 229, 255, 0.3);
-    border-radius: 25px;
+    border: 1px solid rgba(0, 229, 255, 0.2);
+    border-radius: 20px;
     padding: 20px;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 0 20px rgba(0, 229, 255, 0.1);
 }
 
 h1 {
-    color: #FFFFFF;
     text-align: center;
-    font-weight: 300; /* sans-serif-condensed-light */
+    color: white;
+    font-weight: 300;
     letter-spacing: 2px;
-    font-size: 24px;
-    margin-top: 10px;
+    font-size: 22px;
 }
 
-.search-section {
+/* --- Animated Search Bar --- */
+.search-wrapper {
     display: flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 5px 15px;
+    justify-content: flex-end;
     margin: 20px 0;
+    position: relative;
+    height: 45px;
 }
 
-input {
-    flex: 1;
-    background: transparent;
-    border: none;
+#nameInput {
+    width: 0;
+    opacity: 0;
+    padding: 10px 0;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--neon-cyan);
+    border-radius: 8px;
     color: white;
-    padding: 10px;
+    transition: all 0.5s ease;
     outline: none;
-    font-size: 16px;
+    position: absolute;
+    right: 50px;
 }
 
-input::placeholder { color: rgba(255, 255, 255, 0.6); }
+#nameInput.active {
+    width: 80%;
+    opacity: 1;
+    padding: 10px 15px;
+}
 
 .search-icon {
+    font-size: 24px;
     color: var(--neon-cyan);
-    font-size: 20px;
     cursor: pointer;
+    transition: transform 0.5s ease;
+    z-index: 10;
 }
 
+.search-icon.rotate {
+    transform: rotate(360deg);
+}
+
+/* --- Table Design --- */
 .table-header {
     display: grid;
     grid-template-columns: 1.5fr 1fr 1fr;
-    background: rgba(0, 229, 255, 0.15); /* 20% opacity ng neon cyan */
+    background: rgba(0, 229, 255, 0.1);
     padding: 12px;
     border-radius: 5px;
-    margin-bottom: 5px;
-}
-
-.table-header span {
     color: var(--neon-cyan);
     font-weight: bold;
     font-size: 11px;
-    letter-spacing: 1px;
 }
 
 .scroll-area {
@@ -93,11 +100,13 @@ input::placeholder { color: rgba(255, 255, 255, 0.6); }
 .attendance-row {
     display: grid;
     grid-template-columns: 1.5fr 1fr 1fr;
-    padding: 12px;
+    padding: 15px 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     font-size: 13px;
-    color: white;
+    animation: fadeIn 0.5s ease forwards;
 }
 
-/* Custom Scrollbar */
-.scroll-area::-webkit-scrollbar { width: 0px; }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
