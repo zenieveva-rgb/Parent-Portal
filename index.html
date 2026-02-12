@@ -3,23 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parent Portal | Student Attendance</title>
+    <title>Parent Portal</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="container">
-        <div class="logo-icon">🛡️</div>
-        <h2>Parent Portal</h2>
-        <p class="subtitle">Enter Student LRN to track attendance</p>
+    <div class="main-container">
+        <h1>WELCOME, PARENT</h1>
 
-        <div class="input-group">
-            <input type="text" id="lrnInput" placeholder="Enter 12-digit LRN">
+        <div class="search-section">
+            <input type="text" id="lrnInput" placeholder="Search LRN student...">
+            <span class="search-icon" id="searchBtn">🔍</span>
         </div>
-        <button id="searchBtn">Search Record</button>
 
-        <div id="results">
+        <div class="table-header">
+            <span>NAME</span>
+            <span>GRADE</span>
+            <span>TIME</span>
+        </div>
+
+        <div class="scroll-area" id="attendanceTable">
+            <div style="text-align: center; margin-top: 20px; opacity: 0.5; font-size: 12px;">
+                Enter LRN to view records
             </div>
+        </div>
     </div>
 
     <script type="module" src="script.js"></script>
