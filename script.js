@@ -16,26 +16,17 @@ const db = getDatabase(app);
 
 const searchBtn = document.getElementById('searchBtn');
 const nameInput = document.getElementById('nameInput');
-const tableBody = document.getElementById('attendanceTable'); // Siguraduhin na ito ay <tbody> o <div> container
+const tableBody = document.getElementById('attendanceTable');
 
-// --- 1. Search Animation & Toggle ---
+// --- 1. Search Functionality ---
 searchBtn.addEventListener('click', () => {
     searchBtn.classList.add('rotate');
     setTimeout(() => searchBtn.classList.remove('rotate'), 500);
-
-    nameInput.classList.toggle('active');
-    
-    if (nameInput.classList.contains('active')) {
-        nameInput.focus();
-    } else {
-        performSearch(); 
-    }
+    nameInput.focus();
 });
 
-// Makinig sa pag-type para "Real-time Filter"
 nameInput.addEventListener('input', performSearch);
 
-// --- 2. Main Data Fetching & Formatting ---
 function performSearch() {
     const queryName = nameInput.value.trim().toLowerCase();
     const attRef = ref(db, 'attendance');
@@ -45,54 +36,35 @@ function performSearch() {
         tableBody.innerHTML = ''; 
 
         if (data) {
-            // I-convert ang objects tungo sa array at i-sort (Latest First)
             const records = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
-            
-            // I-filter ang records base sa Full Name
             const filtered = records.filter(r => 
                 r.displayName.toLowerCase().includes(queryName)
             );
 
             if (filtered.length > 0) {
                 filtered.forEach(log => {
-                    // Pag-format ng Oras
                     const time = new Date(log.timestamp).toLocaleTimeString([], { 
                         hour: '2-digit', 
                         minute: '2-digit' 
                     });
 
-                    // Formal Table-like Row Structure
                     const row = document.createElement('div');
                     row.className = 'attendance-row';
-                    row.style.cssText = `
-                        display: grid;
-                        grid-template-columns: 2fr 1fr 1fr;
-                        padding: 12px;
-                        border-bottom: 1px solid rgba(255,255,255,0.1);
-                        align-items: center;
-                    `;
-
-                    row.innerHTML = `
-                        <span style="color:white; font-weight:500; text-transform: uppercase;">${log.displayName}</span>
-                        <span style="color:#2575fc; text-align:center;">${log.grade || 'N/A'}</span>
-                        <span style="color:#00ffcc; text-align:right; font-family: monospace;">${time}</span>
-                    `;
                     
+                    row.innerHTML = `
+                        <span class="col-name">${log.displayName}</span>
+                        <span class="col-grade">${log.grade || 'N/A'}</span>
+                        <span class="col-time">${time}</span>
+                    `;
                     tableBody.appendChild(row);
                 });
             } else {
-                tableBody.innerHTML = `
-                    <div style="text-align:center; padding:40px; opacity:0.5;">
-                        <i class="fa-solid fa-magnifying-glass" style="font-size: 20px; margin-bottom:10px;"></i>
-                        <p>No record found for "${queryName}"</p>
-                    </div>
-                `;
+                tableBody.innerHTML = `<div class="empty-msg">No record found for "${queryName}"</div>`;
             }
         } else {
-            tableBody.innerHTML = '<p style="text-align:center; padding:20px; opacity:0.5;">Waiting for scans...</p>';
+            tableBody.innerHTML = '<div class="empty-msg">Waiting for scans...</div>';
         }
     });
 }
 
-// Initial Load
 performSearch();
