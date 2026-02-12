@@ -1,97 +1,103 @@
 :root {
-    --neon-blue: #00f2ff;
-    --deep-bg: #0a111a;
-    --glass: rgba(0, 242, 255, 0.05);
-    --text-gray: #a0aec0;
+    --neon-cyan: #00E5FF;
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --overlay: rgba(0, 0, 0, 0.5); /* Eto yung #80000000 sa code mo */
 }
 
 body {
-    background: radial-gradient(circle at top right, #1a202c, #0a111a);
-    color: white;
-    font-family: 'Inter', 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    /* Palitan ang URL ng image/bg_main.png mo */
+    background: linear-gradient(var(--overlay), var(--overlay)), 
+                url('image/login.png') no-repeat center center fixed;
+    background-size: cover;
+    height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    margin: 0;
 }
 
-.container {
+.main-container {
     width: 90%;
-    max-width: 450px;
-    background: var(--glass);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(0, 242, 255, 0.2);
-    padding: 40px 30px;
-    border-radius: 24px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    max-width: 400px;
+    height: 80vh;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(0, 229, 255, 0.3);
+    border-radius: 25px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.1);
+}
+
+h1 {
+    color: #FFFFFF;
     text-align: center;
+    font-weight: 300; /* sans-serif-condensed-light */
+    letter-spacing: 2px;
+    font-size: 24px;
+    margin-top: 10px;
 }
 
-.logo-icon {
-    font-size: 3rem;
-    margin-bottom: 10px;
-    text-shadow: 0 0 20px var(--neon-blue);
-}
-
-h2 {
-    margin: 0 0 10px 0;
-    letter-spacing: 1px;
-    font-weight: 700;
-}
-
-p.subtitle {
-    color: var(--text-gray);
-    font-size: 0.9rem;
-    margin-bottom: 30px;
+.search-section {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 5px 15px;
+    margin: 20px 0;
 }
 
 input {
-    width: 100%;
-    padding: 15px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(0, 242, 255, 0.3);
-    border-radius: 12px;
-    color: white;
-    font-size: 1rem;
-    box-sizing: border-box;
-    outline: none;
-    transition: 0.3s;
-}
-
-input:focus {
-    border-color: var(--neon-blue);
-    box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
-}
-
-button {
-    width: 100%;
-    padding: 15px;
-    background: var(--neon-blue);
-    color: #000;
+    flex: 1;
+    background: transparent;
     border: none;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 1rem;
+    color: white;
+    padding: 10px;
+    outline: none;
+    font-size: 16px;
+}
+
+input::placeholder { color: rgba(255, 255, 255, 0.6); }
+
+.search-icon {
+    color: var(--neon-cyan);
+    font-size: 20px;
     cursor: pointer;
-    transition: 0.3s;
-    text-transform: uppercase;
+}
+
+.table-header {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr;
+    background: rgba(0, 229, 255, 0.15); /* 20% opacity ng neon cyan */
+    padding: 12px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+}
+
+.table-header span {
+    color: var(--neon-cyan);
+    font-weight: bold;
+    font-size: 11px;
     letter-spacing: 1px;
-    margin-top: 15px;
 }
 
-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0, 242, 255, 0.3);
+.scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 10px;
 }
 
-.log-item {
-    background: rgba(255, 255, 255, 0.03);
-    padding: 15px;
-    border-radius: 10px;
-    margin-top: 15px;
-    border-left: 3px solid var(--neon-blue);
-    text-align: left;
+.attendance-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr;
+    padding: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 13px;
+    color: white;
 }
 
-.status { color: var(--neon-blue); font-weight: bold; font-size: 0.8rem; }
+/* Custom Scrollbar */
+.scroll-area::-webkit-scrollbar { width: 0px; }
