@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
 import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
 
+// 1. Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBdlEvDlQ1qWr8xdL4bV25NW4RgcTajYqM",
     authDomain: "database-98a70.firebaseapp.com",
@@ -11,15 +12,15 @@ const firebaseConfig = {
     appId: "1:460345885965:web:8484da766b979a0eaf9c44"
 };
 
-// 1. Initialize Firebase
+// 2. Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// 2. Get HTML Elements
+// 3. Get HTML Elements
 const tableBody = document.getElementById('attendanceTable');
 const nameInput = document.getElementById('nameInput');
 
-// 3. Define the Function FIRST
+// 4. Define the Function First (Para kilala na ito ng browser bago gamitin)
 function performSearch() {
     const queryName = nameInput.value.trim().toLowerCase();
     const attRef = ref(db, 'attendance');
@@ -29,7 +30,7 @@ function performSearch() {
         tableBody.innerHTML = ''; 
 
         if (data) {
-            // I-convert at i-sort: Latest first
+            // I-convert ang objects sa array at i-sort: Latest scan sa itaas
             const records = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
             
             records.filter(r => r.displayName.toLowerCase().includes(queryName))
@@ -49,11 +50,13 @@ function performSearch() {
                 tableBody.appendChild(row);
             });
         } else {
-            tableBody.innerHTML = '<p style="text-align:center; color:white; opacity:0.5; padding:20px;">No records found.</p>';
+            tableBody.innerHTML = '<p style="text-align:center; color:white; opacity:0.5; padding:20px;">No records yet.</p>';
         }
     });
 }
 
-// 4. Add Event Listeners and Initial Load AFTER defining the function
+// 5. Add Event Listener (Makinig sa pag-type ng user)
 nameInput.addEventListener('input', performSearch);
+
+// 6. Initial Load (Para lumabas agad ang data pagbukas ng page)
 performSearch();
