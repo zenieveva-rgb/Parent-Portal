@@ -13,57 +13,83 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+
 const searchBtn = document.getElementById('searchBtn');
 const nameInput = document.getElementById('nameInput');
-const table = document.getElementById('attendanceTable');
+const tableBody = document.getElementById('attendanceTable'); // Siguraduhin na ito ay <tbody> o <div> container
 
-// --- Search Animation & Toggle ---
+// --- 1. Search Animation & Toggle ---
 searchBtn.addEventListener('click', () => {
-    // Rotate Icon
     searchBtn.classList.add('rotate');
     setTimeout(() => searchBtn.classList.remove('rotate'), 500);
 
-    // Toggle Search Bar
     nameInput.classList.toggle('active');
     
     if (nameInput.classList.contains('active')) {
         nameInput.focus();
     } else {
-        performSearch(); // Search when bar is closed
+        performSearch(); 
     }
 });
 
-// Real-time listener para sa lahat ng data
+// Makinig sa pag-type para "Real-time Filter"
+nameInput.addEventListener('input', performSearch);
+
+// --- 2. Main Data Fetching & Formatting ---
 function performSearch() {
     const queryName = nameInput.value.trim().toLowerCase();
     const attRef = ref(db, 'attendance');
 
     onValue(attRef, (snapshot) => {
         const data = snapshot.val();
-        table.innerHTML = ''; 
+        tableBody.innerHTML = ''; 
 
         if (data) {
-            const records = Object.values(data);
+            // I-convert ang objects tungo sa array at i-sort (Latest First)
+            const records = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
             
-            // Filter by Name (Hindi na LRN)
+            // I-filter ang records base sa Full Name
             const filtered = records.filter(r => 
                 r.displayName.toLowerCase().includes(queryName)
-            ).sort((a, b) => b.timestamp - a.timestamp);
+            );
 
             if (filtered.length > 0) {
                 filtered.forEach(log => {
-                    const time = new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    table.innerHTML += `
-                        <div class="attendance-row">
-                            <span style="color:white; font-weight:500;">${log.displayName}</span>
-                            <span style="color:var(--tech-blue);">${log.grade || 'N/A'}</span>
-                            <span style="color:var(--neon-cyan);">${time}</span>
-                        </div>
+                    // Pag-format ng Oras
+                    const time = new Date(log.timestamp).toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+
+                    // Formal Table-like Row Structure
+                    const row = document.createElement('div');
+                    row.className = 'attendance-row';
+                    row.style.cssText = `
+                        display: grid;
+                        grid-template-columns: 2fr 1fr 1fr;
+                        padding: 12px;
+                        border-bottom: 1px solid rgba(255,255,255,0.1);
+                        align-items: center;
                     `;
+
+                    row.innerHTML = `
+                        <span style="color:white; font-weight:500; text-transform: uppercase;">${log.displayName}</span>
+                        <span style="color:#2575fc; text-align:center;">${log.grade || 'N/A'}</span>
+                        <span style="color:#00ffcc; text-align:right; font-family: monospace;">${time}</span>
+                    `;
+                    
+                    tableBody.appendChild(row);
                 });
             } else {
-                table.innerHTML = '<p style="text-align:center; opacity:0.5; font-size:12px; margin-top:20px;">No record found.</p>';
+                tableBody.innerHTML = `
+                    <div style="text-align:center; padding:40px; opacity:0.5;">
+                        <i class="fa-solid fa-magnifying-glass" style="font-size: 20px; margin-bottom:10px;"></i>
+                        <p>No record found for "${queryName}"</p>
+                    </div>
+                `;
             }
+        } else {
+            tableBody.innerHTML = '<p style="text-align:center; padding:20px; opacity:0.5;">Waiting for scans...</p>';
         }
     });
 }
