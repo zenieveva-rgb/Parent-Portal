@@ -3,41 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parent Portal</title>
+    <title>Parent Portal - Attendance</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div class="glass-card table-container">
-    <h2 class="neon-text">ATTENDANCE LOGS</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>FULL NAME</th>
-                <th>GRADE/SEC</th>
-                <th>TIME SCANNED</th>
-            </tr>
-        </thead>
-        <tbody id="attendance-list">
-            </tbody>
-    </table>
-</div>
-
     <div class="main-container">
-        <h1>WELCOME, PARENT</h1>
+        <h2 class="neon-text">WELCOME, PARENT</h2>
 
         <div class="search-wrapper">
             <input type="text" id="nameInput" placeholder="Enter Full Name...">
-            <span class="search-icon" id="searchBtn">🔍</span>
+            <span class="search-icon" id="searchBtn">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
         </div>
 
-        <div class="table-header">
-            <span>FULLNAME</span>
-            <span>GRADE/SEC</span>
-            <span>TIME</span>
-        </div>
-
-        <div class="scroll-area" id="attendanceTable">
+        <div class="attendance-box">
+            <div class="table-header">
+                <span>FULLNAME</span>
+                <span>GRADE/SEC</span>
+                <span>TIME</span>
             </div>
+
+            <div class="scroll-area" id="attendanceTable">
+                <p style="text-align:center; padding:20px; opacity:0.5; color: white;">Connecting to database...</p>
+            </div>
+        </div>
     </div>
 
     <script type="module" src="script.js"></script>
