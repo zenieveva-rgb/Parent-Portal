@@ -14,18 +14,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const searchBtn = document.getElementById('searchBtn');
-const nameInput = document.getElementById('nameInput');
 const tableBody = document.getElementById('attendanceTable');
-
-// --- 1. Search Functionality ---
-searchBtn.addEventListener('click', () => {
-    searchBtn.classList.add('rotate');
-    setTimeout(() => searchBtn.classList.remove('rotate'), 500);
-    nameInput.focus();
-});
-
-nameInput.addEventListener('input', performSearch);
+const nameInput = document.getElementById('nameInput');
 
 function performSearch() {
     const queryName = nameInput.value.trim().toLowerCase();
@@ -37,34 +27,23 @@ function performSearch() {
 
         if (data) {
             const records = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
-            const filtered = records.filter(r => 
-                r.displayName.toLowerCase().includes(queryName)
-            );
+            
+            records.filter(r => r.displayName.toLowerCase().includes(queryName))
+            .forEach(log => {
+                const time = new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            if (filtered.length > 0) {
-                filtered.forEach(log => {
-                    const time = new Date(log.timestamp).toLocaleTimeString([], { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                    });
-
-                    const row = document.createElement('div');
-                    row.className = 'attendance-row';
-                    
-                    row.innerHTML = `
-                        <span class="col-name">${log.displayName}</span>
-                        <span class="col-grade">${log.grade || 'N/A'}</span>
-                        <span class="col-time">${time}</span>
-                    `;
-                    tableBody.appendChild(row);
-                });
-            } else {
-                tableBody.innerHTML = `<div class="empty-msg">No record found for "${queryName}"</div>`;
-            }
-        } else {
-            tableBody.innerHTML = '<div class="empty-msg">Waiting for scans...</div>';
+                const row = document.createElement('div');
+                row.className = 'attendance-row';
+                row.innerHTML = `
+                    <span class="col-name">${log.displayName}</span>
+                    <span class="col-grade">${log.grade || 'N/A'}</span>
+                    <span class="col-time">${time}</span>
+                `;
+                tableBody.appendChild(row);
+            });
         }
     });
 }
 
+nameInput.addEventListener('input', performSearch);
 performSearch();
