@@ -3,21 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parent Portal</title>
+    <title>Parent Portal - Logs</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
+<body class="fade-in">
     <div class="page-background">
-        <div class="main-container">
-            <h1 class="portal-title">WELCOME, PARENT</h1>
+        <div class="main-container" id="panel">
+            <h1 class="portal-title">RECENT LOGS</h1>
 
-            <div class="search-wrapper">
-                <div class="search-box" id="searchBox">
-                    <input type="text" id="nameInput" placeholder="Enter Student Name..." class="search-input">
-                    <span id="searchBtn" class="search-icon">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </span>
+            <div class="top-row">
+                <button id="navToHistory" class="action-btn">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </button>
+
+                <div class="search-wrapper">
+                    <div class="search-box" id="searchBox">
+                        <input type="text" id="nameInput" placeholder="Search Student..." class="search-input">
+                        <span id="searchBtn" class="search-icon">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -27,8 +33,7 @@
                 <span class="header-time">TIME</span>
             </div>
 
-            <div class="attendance-list" id="attendanceTable">
-                </div>
+            <div class="attendance-list" id="attendanceTable"></div>
         </div>
     </div>
 
