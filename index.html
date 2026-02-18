@@ -3,23 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parent Portal - Recent Logs</title>
+    <title>Parent Portal | Real-Time Logs</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div class="page-background">
+    <div class="animated-bg"></div> <div class="page-background">
         <div class="main-container" id="mainPanel">
-            <h1 class="portal-title">RECENT LOGS</h1>
+            <div class="glass-header">
+                <h1 class="portal-title">LIVE MONITOR</h1>
+                <div class="status-indicator">
+                    <span class="dot"></span> ACTIVE
+                </div>
+            </div>
 
             <div class="top-controls">
-                <button id="navToHistory" class="action-btn">
+                <button id="navToHistory" class="action-btn" title="View History">
                     <i class="fa-solid fa-clock-rotate-left"></i>
                 </button>
 
                 <div class="search-wrapper">
                     <div class="search-box" id="searchBox">
-                        <input type="text" id="nameInput" placeholder="Search..." class="search-input">
+                        <input type="text" id="nameInput" placeholder="Search student..." class="search-input">
                         <span id="searchBtn" class="search-icon">
                             <i class="fa-solid fa-magnifying-glass"></i>
                         </span>
@@ -27,14 +32,14 @@
                 </div>
             </div>
 
-            <div class="table-header">
-                <span class="header-name">FULLNAME</span>
-                <span class="header-grade">GRADE/SEC</span>
-                <span class="header-time">TIME</span>
-            </div>
-
-            <div class="attendance-list" id="attendanceTable">
+            <div class="table-container">
+                <div class="table-header">
+                    <span><i class="fa-solid fa-user"></i> FULLNAME</span>
+                    <span><i class="fa-solid fa-graduation-cap"></i> GRADE</span>
+                    <span><i class="fa-solid fa-clock"></i> TIME</span>
                 </div>
+                <div class="attendance-list" id="attendanceTable"></div>
+            </div>
         </div>
     </div>
 
