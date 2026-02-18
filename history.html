@@ -8,15 +8,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div class="top-controls">
-    <div class="control-group">
-        <i class="fa-solid fa-trash-can" id="trashBinBtn" title="Junk Files"></i>
-        <i class="fa-solid fa-eraser" id="toggleDeleteMode" title="Enable Delete"></i>
-    </div>
-</div>
     <div class="animated-bg history-theme"></div>
     <div class="page-background">
         <div class="main-container" id="mainPanel">
+            
             <div class="glass-header">
                 <h1 class="portal-title gold-text">SCAN ARCHIVE</h1>
                 <div class="status-indicator gold-border">
@@ -24,10 +19,15 @@
                 </div>
             </div>
 
-            <div class="top-controls">
+            <div class="top-controls-container">
                 <button id="navToPortal" class="action-btn gold-btn">
                     <i class="fa-solid fa-arrow-left"></i>
                 </button>
+                
+                <div class="admin-group">
+                    <i class="fa-solid fa-trash-can" id="trashBinBtn" title="Junk Files"></i>
+                    <i class="fa-solid fa-eraser" id="toggleDeleteMode" title="Enable Delete"></i>
+                </div>
             </div>
 
             <div class="table-container">
@@ -40,22 +40,23 @@
             </div>
         </div>
     </div>
+
     <div id="historyModal" class="modal-overlay">
-    <div class="modal-content glass-card">
-        <div class="modal-header">
-            <h2 id="modalStudentName">STUDENT NAME</h2>
-            <button id="closeModal" class="close-btn">&times;</button>
-      
-        </div>
-        <div class="modal-body">
-            <div class="table-header popup-grid">
-                <span>DATE</span>
-                <span>TIME</span>
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h2 id="modalStudentName">STUDENT NAME</h2>
+                <button id="closeModal" class="close-btn">&times;</button>
             </div>
-            <div id="individualLogs" class="popup-list"></div>
+            <div class="modal-body">
+                <div class="table-header popup-grid">
+                    <span>DATE</span>
+                    <span>TIME</span>
+                </div>
+                <div id="individualLogs" class="popup-list"></div>
+            </div>
         </div>
     </div>
-</div>
+
     <script type="module" src="script.js"></script>
 </body>
 </html>
