@@ -155,3 +155,16 @@ document.getElementById('navToPortal')?.addEventListener('click', () => {
 });
 
 processData();
+
+// Add this inside your script.js
+const trashBtn = document.getElementById('trashBinBtn');
+trashBtn?.addEventListener('click', () => {
+    const panel = document.getElementById('mainPanel');
+    panel.style.transition = "all 0.5s ease";
+    panel.style.transform = "scale(0.9)"; // Zoom-out effect
+    panel.style.opacity = "0";
+    
+    setTimeout(() => {
+        window.location.href = "junk.html";
+    }, 500);
+});
