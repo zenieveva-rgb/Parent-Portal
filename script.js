@@ -96,33 +96,40 @@ eraserBtn?.addEventListener('click', async () => {
 // --- 5. RENDER LOGIC: PORTAL (ROWS) vs HISTORY (ALBUMS) ---
 function processData(searchTerm = "") {
     const attRef = ref(db, 'attendance');
-    const portalTable = document.getElementById('attendanceTable'); 
-    const historyTable = document.getElementById('historyTable');   
+    const portalTable = document.getElementById('attendanceTable'); // Used in index.html
+    const historyTable = document.getElementById('historyTable');   // Used in history.html
     
     onValue(attRef, (snapshot) => {
         const data = snapshot.val();
         fullDataBuffer = data || {}; 
         
-        // VIEW: PARENT PORTAL - Only Name, Grade, and Time appear
+        // --- VIEW A: LIVE MONITOR (Parent Portal) ---
+        // Shows only the raw list of recent scans: Name, Grade, and Time
         if (portalTable) {
             portalTable.innerHTML = '';
-            if (!data) return;
+            if (!data) {
+                portalTable.innerHTML = '<p style="text-align:center; opacity:0.5; margin-top:20px;">No Recent Scans</p>';
+                return;
+            }
+
+            // Convert to array and reverse to show latest scan first
             Object.entries(data)
                 .filter(([k, v]) => v.studentName?.toLowerCase().includes(searchTerm))
-                .reverse()
+                .reverse() 
                 .forEach(([key, val]) => {
                     const row = document.createElement('div');
                     row.className = 'attendance-row';
                     row.innerHTML = `
-                        <span>${val.studentName}</span>
+                        <span style="font-weight: 600;">${val.studentName}</span>
                         <span class="text-center">${val.grade || 'N/A'}</span>
-                        <span class="text-right">${val.time || val.scannedAt}</span>
+                        <span class="text-right" style="color: var(--neon-cyan);">${val.time || val.scannedAt || '--:--'}</span>
                     `;
                     portalTable.appendChild(row);
                 });
         }
 
-        // VIEW: HISTORY - Albums (Folders) only appear here
+        // --- VIEW B: SCAN ARCHIVE (History) ---
+        // Groups scans by student into "Folders/Albums"
         if (historyTable) {
             historyTable.innerHTML = '';
             if (!data) {
@@ -130,13 +137,20 @@ function processData(searchTerm = "") {
                 return;
             }
 
+            // Grouping logic for Albums
             const albums = {};
             Object.entries(data).forEach(([key, val]) => {
-                const sName = val.studentName || "Unknown";
-                if (!albums[sName]) albums[sName] = { grade: val.grade, logs: [] };
+                const sName = val.studentName || "Unknown Student";
+                if (!albums[sName]) {
+                    albums[sName] = { 
+                        grade: val.grade || 'N/A', 
+                        logs: [] 
+                    };
+                }
                 albums[sName].logs.push({ key, ...val });
             });
 
+            // Render Albums
             Object.keys(albums)
                 .filter(name => name.toLowerCase().includes(searchTerm))
                 .forEach(name => {
@@ -151,11 +165,12 @@ function processData(searchTerm = "") {
                         <div class="student-album">
                             <div class="album-icon"><i class="fa-solid fa-folder"></i></div>
                             <div class="album-name">${name}</div>
-                            <div class="album-sub">${albums[name].grade || 'N/A'}</div>
-                            <div class="total-scans">${albums[name].logs.length} Scans</div>
+                            <div class="album-sub">Grade: ${albums[name].grade}</div>
+                            <div class="total-scans">${albums[name].logs.length} Total Logs</div>
                         </div>
                     `;
                     
+                    // Click to open logs (only if not in delete mode)
                     wrapper.querySelector('.student-album').onclick = () => {
                         if (!isSelectionMode) showPopUp(name, albums[name].logs);
                     };
