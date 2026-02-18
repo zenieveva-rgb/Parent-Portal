@@ -60,3 +60,20 @@ nameInput.addEventListener('input', performSearch);
 
 // 6. Initial Load (Para lumabas agad ang data pagbukas ng page)
 performSearch();
+
+// Get the new elements for animation
+const searchBtn = document.getElementById('searchBtn');
+const searchBox = document.querySelector('.search-box');
+
+// Toggle the 'active' class on click
+searchBtn.addEventListener('click', () => {
+    searchBox.classList.toggle('active');
+    
+    // Focus the input automatically when it opens
+    if (searchBox.classList.contains('active')) {
+        nameInput.focus();
+    } else {
+        nameInput.value = ''; // Optional: clear search when closing
+        performSearch(); // Refresh list
+    }
+});
