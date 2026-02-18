@@ -194,3 +194,33 @@ document.getElementById('closeModal')?.addEventListener('click', () => {
 });
 
 processData();
+// --- NAVIGATION & ANIMATION LOGIC ---
+
+function smoothNavigate(url) {
+    const panel = document.getElementById('mainPanel');
+    
+    if (panel) {
+        // Apply smooth zoom-out and fade effect
+        panel.style.transition = "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
+        panel.style.transform = "scale(0.9) translateY(20px)";
+        panel.style.opacity = "0";
+        panel.style.filter = "blur(10px)";
+    }
+
+    // Wait for animation to finish before switching pages
+    setTimeout(() => {
+        window.location.href = url;
+    }, 500);
+}
+
+// History Icon Click
+document.getElementById('navToHistory')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    smoothNavigate('history.html');
+});
+
+// Junk Icon Click
+document.getElementById('trashBinBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    smoothNavigate('junk.html');
+});
