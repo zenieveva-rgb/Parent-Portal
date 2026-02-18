@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-import { getDatabase, ref, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
+import { getDatabase, ref, onValue, set, remove, update, get } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
 
 // --- 1. FIREBASE CONFIGURATION ---
 const firebaseConfig = {
@@ -16,23 +16,40 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 // --- 2. GLOBAL STATE ---
-const ADMIN_PASSWORD = "1234"; // Set your admin password here
+const ADMIN_PASSWORD = "1234"; 
 let isSelectionMode = false;
 let selectedAlbums = new Set();
+let fullDataBuffer = {}; 
 
-// --- 3. SELECTION & BULK DELETE LOGIC ---
+// --- 3. NAVIGATION WITH ANIMATION ---
+function smoothNavigate(url) {
+    const panel = document.getElementById('mainPanel');
+    if (panel) {
+        panel.style.transition = "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
+        panel.style.transform = "scale(0.9) translateY(20px)";
+        panel.style.opacity = "0";
+        panel.style.filter = "blur(10px)";
+    }
+    setTimeout(() => { window.location.href = url; }, 500);
+}
+
+// Attach listeners to navigation icons
+document.getElementById('trashBinBtn')?.addEventListener('click', () => smoothNavigate('junk.html'));
+document.getElementById('navToPortal')?.addEventListener('click', () => smoothNavigate('index.html'));
+document.getElementById('navToHistory')?.addEventListener('click', () => smoothNavigate('history.html'));
+
+// --- 4. SELECTION & BULK DELETE LOGIC ---
 const eraserBtn = document.getElementById('toggleDeleteMode');
 const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
 
 eraserBtn?.addEventListener('click', () => {
     isSelectionMode = !isSelectionMode;
     eraserBtn.classList.toggle('active', isSelectionMode);
-    bulkDeleteBtn.style.display = isSelectionMode ? "block" : "none";
+    if (bulkDeleteBtn) bulkDeleteBtn.style.display = isSelectionMode ? "block" : "none";
     if (!isSelectionMode) selectedAlbums.clear();
-    processData(); // Refresh UI to show/hide checkboxes
+    processData(); 
 });
 
-// Logic to handle individual checkbox clicks
 window.toggleSelect = (studentName) => {
     if (selectedAlbums.has(studentName)) {
         selectedAlbums.delete(studentName);
@@ -41,18 +58,34 @@ window.toggleSelect = (studentName) => {
     }
 };
 
-// Bulk Delete Action
 bulkDeleteBtn?.addEventListener('click', async () => {
-    if (selectedAlbums.size === 0) return alert("Please select at least one album.");
+    if (selectedAlbums.size === 0) return alert("Select at least one album.");
     
     const pass = prompt(`Enter Admin Password to move ${selectedAlbums.size} items to Junk:`);
     if (pass === ADMIN_PASSWORD) {
-        if (confirm("Move selected albums to Junk Files?")) {
-            // Processing bulk move logic here...
-            alert("Items moved to Junk bin.");
+        if (confirm("Move selected albums to Junk?")) {
+            for (let name of selectedAlbums) {
+                const logsToMove = Object.entries(fullDataBuffer)
+                    .filter(([key, val]) => val.studentName === name);
+
+                const trashId = Date.now() + "_" + name.replace(/\s+/g, '_');
+                
+                // Move to Trash Node
+                await set(ref(db, `trash/${trashId}`), {
+                    studentName: name,
+                    deletedAt: new Date().toLocaleString(),
+                    data: logsToMove.map(([key, val]) => ({ key, ...val }))
+                });
+
+                // Remove from Attendance
+                for (let [key] of logsToMove) {
+                    await remove(ref(db, `attendance/${key}`));
+                }
+            }
+            alert("Moved to Junk bin successfully.");
             selectedAlbums.clear();
             isSelectionMode = false;
-            bulkDeleteBtn.style.display = "none";
+            if (bulkDeleteBtn) bulkDeleteBtn.style.display = "none";
             processData();
         }
     } else {
@@ -60,7 +93,7 @@ bulkDeleteBtn?.addEventListener('click', async () => {
     }
 });
 
-// --- 4. MAIN DATA PROCESSING ---
+// --- 5. DATA PROCESSING ---
 function processData() {
     const attRef = ref(db, 'attendance');
     const historyBody = document.getElementById('historyTable');
@@ -68,9 +101,15 @@ function processData() {
 
     onValue(attRef, (snapshot) => {
         const data = snapshot.val();
-        if (!data || !historyBody) return;
+        fullDataBuffer = data || {}; 
+        if (!historyBody) return;
         historyBody.innerHTML = '';
         
+        if (!data) {
+            historyBody.innerHTML = '<p style="text-align:center; padding:20px; color:gray;">No scans found.</p>';
+            return;
+        }
+
         const albums = {};
         Object.entries(data).forEach(([key, val]) => {
             const sName = val.studentName || "Unknown";
@@ -79,13 +118,13 @@ function processData() {
         });
 
         Object.keys(albums).filter(name => name.toLowerCase().includes(query)).forEach(name => {
-            const rowWrapper = document.createElement('div');
-            rowWrapper.className = 'album-row-wrapper';
+            const row = document.createElement('div');
+            row.className = 'album-row-wrapper';
             
             const checkboxHTML = isSelectionMode ? 
                 `<input type="checkbox" class="album-checkbox" onchange="toggleSelect('${name}')" ${selectedAlbums.has(name) ? 'checked' : ''}>` : '';
             
-            rowWrapper.innerHTML = `
+            row.innerHTML = `
                 ${checkboxHTML}
                 <div class="student-album">
                     <div class="album-icon"><i class="fa-solid fa-folder"></i></div>
@@ -95,18 +134,20 @@ function processData() {
                 </div>
             `;
             
-            rowWrapper.querySelector('.student-album').onclick = () => {
+            row.querySelector('.student-album').onclick = () => {
                 if (!isSelectionMode) showPopUp(name, albums[name].logs);
             };
-            historyBody.appendChild(rowWrapper);
+            historyBody.appendChild(row);
         });
     });
 }
 
-// --- 5. INDIVIDUAL LOG EDIT/DELETE (Inside Album) ---
+// --- 6. INDIVIDUAL LOG ACTIONS ---
 window.showPopUp = (name, logs) => {
     const list = document.getElementById('individualLogs');
-    document.getElementById('modalStudentName').innerText = name;
+    const modalName = document.getElementById('modalStudentName');
+    if (modalName) modalName.innerText = name;
+    if (!list) return;
     list.innerHTML = '';
 
     logs.forEach(log => {
@@ -115,8 +156,8 @@ window.showPopUp = (name, logs) => {
         item.innerHTML = `
             <span>${log.scannedAt}</span>
             <div class="log-actions">
-                <button onclick="editLogEntry('${log.key}', '${log.studentName}')" title="Edit Name"><i class="fa-solid fa-pen"></i></button>
-                <button onclick="deleteLogEntry('${log.key}')" title="Delete entry"><i class="fa-solid fa-trash"></i></button>
+                <button onclick="editLogEntry('${log.key}', '${log.studentName}')"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="deleteLogEntry('${log.key}')"><i class="fa-solid fa-trash"></i></button>
             </div>
         `;
         list.appendChild(item);
@@ -125,46 +166,21 @@ window.showPopUp = (name, logs) => {
 };
 
 window.deleteLogEntry = (key) => {
-    if (prompt("Enter ADMIN PASSWORD to delete this specific log:") === ADMIN_PASSWORD) {
-        remove(ref(db, `attendance/${key}`))
-            .then(() => alert("Entry deleted."))
-            .catch(err => alert("Error: " + err.message));
-    } else {
-        alert("Permission Denied.");
+    if (prompt("ADMIN PASSWORD:") === ADMIN_PASSWORD) {
+        remove(ref(db, `attendance/${key}`)).then(() => alert("Deleted."));
     }
 };
 
 window.editLogEntry = (key, currentName) => {
-    const newName = prompt("Update Student Name:", currentName);
-    if (newName && prompt("Enter ADMIN PASSWORD to confirm edit:") === ADMIN_PASSWORD) {
-        update(ref(db, `attendance/${key}`), { studentName: newName })
-            .then(() => alert("Entry updated."))
-            .catch(err => alert("Error: " + err.message));
-    } else {
-        alert("Edit cancelled or incorrect password.");
+    const newName = prompt("New Student Name:", currentName);
+    if (newName && prompt("ADMIN PASSWORD:") === ADMIN_PASSWORD) {
+        update(ref(db, `attendance/${key}`), { studentName: newName });
     }
 };
 
-// --- 6. NAVIGATION & MODAL CLOSE ---
+// --- 7. CLOSING MODAL ---
 document.getElementById('closeModal')?.addEventListener('click', () => {
     document.getElementById('historyModal').style.display = 'none';
 });
 
-document.getElementById('navToPortal')?.addEventListener('click', () => {
-    window.location.href = "index.html"; 
-});
-
 processData();
-
-// Add this inside your script.js
-const trashBtn = document.getElementById('trashBinBtn');
-trashBtn?.addEventListener('click', () => {
-    const panel = document.getElementById('mainPanel');
-    panel.style.transition = "all 0.5s ease";
-    panel.style.transform = "scale(0.9)"; // Zoom-out effect
-    panel.style.opacity = "0";
-    
-    setTimeout(() => {
-        window.location.href = "junk.html";
-    }, 500);
-});
