@@ -39,20 +39,15 @@ document.getElementById('nameInput')?.addEventListener('input', (e) => {
     processData(e.target.value.toLowerCase());
 });
 
-// --- 4. THE FIX: RELIABLE DELETE LOGIC ---
+// --- 4. ERASER FUNCTION (FIXED: Moves to Junk then Deletes) ---
 const eraserBtn = document.getElementById('toggleDeleteMode');
 
 eraserBtn?.addEventListener('click', async () => {
-    // Check if we are in History Mode (Albums) because deletion only happens there
-    const isHistoryPage = !!document.getElementById('historyTable');
-
-    if (!isHistoryPage) {
-        alert("Deletion can only be performed in the History Page.");
-        return;
-    }
+    const historyTable = document.getElementById('historyTable');
+    if (!historyTable) return; 
 
     if (isSelectionMode && selectedAlbums.size > 0) {
-        const pass = prompt(`CONFIRM: Move ${selectedAlbums.size} album(s) to Junk? Enter Password:`);
+        const pass = prompt(`Move ${selectedAlbums.size} items to Junk? Enter Password:`);
         
         if (pass === ADMIN_PASSWORD) {
             const deletePromises = [];
@@ -63,16 +58,14 @@ eraserBtn?.addEventListener('click', async () => {
                 if (logsEntries.length > 0) {
                     const trashId = `trash_${Date.now()}_${name.replace(/\s+/g, '_')}`;
 
-                    // A. SEND TO JUNK FIRST (The Backup)
-                    const backupData = {
+                    // Backup to 'trash' node in Firebase
+                    deletePromises.push(set(ref(db, `trash/${trashId}`), {
                         studentName: name,
                         deletedAt: new Date().toLocaleString(),
                         logs: logsEntries.map(([key, val]) => ({ key, ...val }))
-                    };
+                    }));
 
-                    deletePromises.push(set(ref(db, `trash/${trashId}`), backupData));
-
-                    // B. REMOVE FROM MAIN ATTENDANCE
+                    // Remove from main 'attendance' node
                     logsEntries.forEach(([key]) => {
                         deletePromises.push(remove(ref(db, `attendance/${key}`)));
                     });
@@ -80,22 +73,19 @@ eraserBtn?.addEventListener('click', async () => {
             }
 
             try {
-                // WAIT for all Firebase operations to finish
                 await Promise.all(deletePromises);
-                alert("Success: Moved to Junk Bin.");
+                alert("Success: Moved to Junk.");
                 selectedAlbums.clear();
                 isSelectionMode = false;
                 eraserBtn.classList.remove('active');
-                processData(); // Refresh UI
+                processData(); 
             } catch (error) {
-                console.error(error);
-                alert("Database Error: Could not complete deletion.");
+                alert("Database Error. Please try again.");
             }
         } else if (pass !== null) {
-            alert("Wrong Password.");
+            alert("Incorrect Password.");
         }
     } else {
-        // Toggle selection mode
         isSelectionMode = !isSelectionMode;
         if (!isSelectionMode) selectedAlbums.clear();
         eraserBtn?.classList.toggle('active', isSelectionMode);
@@ -103,7 +93,7 @@ eraserBtn?.addEventListener('click', async () => {
     }
 });
 
-// --- 5. DATA RENDERING (Portal vs History Fix) ---
+// --- 5. RENDER LOGIC: PORTAL (ROWS) vs HISTORY (ALBUMS) ---
 function processData(searchTerm = "") {
     const attRef = ref(db, 'attendance');
     const portalTable = document.getElementById('attendanceTable'); 
@@ -113,7 +103,7 @@ function processData(searchTerm = "") {
         const data = snapshot.val();
         fullDataBuffer = data || {}; 
         
-        // VIEW 1: MAIN PORTAL (Rows Only)
+        // VIEW: PARENT PORTAL - Only Name, Grade, and Time appear
         if (portalTable) {
             portalTable.innerHTML = '';
             if (!data) return;
@@ -124,19 +114,19 @@ function processData(searchTerm = "") {
                     const row = document.createElement('div');
                     row.className = 'attendance-row';
                     row.innerHTML = `
-                        <span>${val.studentName || "Unknown"}</span>
+                        <span>${val.studentName}</span>
                         <span class="text-center">${val.grade || 'N/A'}</span>
-                        <span class="text-right">${val.time || val.scannedAt || "No Time"}</span>
+                        <span class="text-right">${val.time || val.scannedAt}</span>
                     `;
                     portalTable.appendChild(row);
                 });
         }
 
-        // VIEW 2: HISTORY (Albums with Checkboxes)
+        // VIEW: HISTORY - Albums (Folders) only appear here
         if (historyTable) {
             historyTable.innerHTML = '';
             if (!data) {
-                historyTable.innerHTML = '<p style="grid-column: 1/-1; text-align:center; opacity:0.5; padding:20px;">Empty History</p>';
+                historyTable.innerHTML = '<p style="grid-column: 1/-1; text-align:center; opacity:0.5;">Empty History</p>';
                 return;
             }
 
@@ -153,9 +143,8 @@ function processData(searchTerm = "") {
                     const wrapper = document.createElement('div');
                     wrapper.className = 'album-row-wrapper';
                     
-                    const isChecked = selectedAlbums.has(name) ? 'checked' : '';
                     const checkboxHTML = isSelectionMode ? 
-                        `<input type="checkbox" class="album-checkbox" onchange="toggleSelect('${name}')" ${isChecked}>` : '';
+                        `<input type="checkbox" class="album-checkbox" onchange="toggleSelect('${name}')" ${selectedAlbums.has(name) ? 'checked' : ''}>` : '';
 
                     wrapper.innerHTML = `
                         ${checkboxHTML}
@@ -181,7 +170,7 @@ window.toggleSelect = (studentName) => {
     else selectedAlbums.add(studentName);
 };
 
-// --- 6. POPUP ---
+// --- 6. POPUP & MODALS ---
 window.showPopUp = (name, logs) => {
     document.getElementById('modalStudentName').innerText = name;
     const list = document.getElementById('individualLogs');
@@ -207,4 +196,4 @@ document.getElementById('closeModal')?.addEventListener('click', () => {
     document.getElementById('historyModal').style.display = 'none';
 });
 
-processData();s
+processData();
