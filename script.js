@@ -39,10 +39,18 @@ document.getElementById('nameInput')?.addEventListener('input', (e) => {
     processData(e.target.value.toLowerCase());
 });
 
-// --- 4. RELIABLE DELETE LOGIC (Moves to Junk then Deletes) ---
+// --- 4. THE FIX: RELIABLE DELETE LOGIC ---
 const eraserBtn = document.getElementById('toggleDeleteMode');
 
 eraserBtn?.addEventListener('click', async () => {
+    // Check if we are in History Mode (Albums) because deletion only happens there
+    const isHistoryPage = !!document.getElementById('historyTable');
+
+    if (!isHistoryPage) {
+        alert("Deletion can only be performed in the History Page.");
+        return;
+    }
+
     if (isSelectionMode && selectedAlbums.size > 0) {
         const pass = prompt(`CONFIRM: Move ${selectedAlbums.size} album(s) to Junk? Enter Password:`);
         
@@ -55,14 +63,16 @@ eraserBtn?.addEventListener('click', async () => {
                 if (logsEntries.length > 0) {
                     const trashId = `trash_${Date.now()}_${name.replace(/\s+/g, '_')}`;
 
-                    // 1. Prepare the backup to Junk
-                    deletePromises.push(set(ref(db, `trash/${trashId}`), {
+                    // A. SEND TO JUNK FIRST (The Backup)
+                    const backupData = {
                         studentName: name,
                         deletedAt: new Date().toLocaleString(),
                         logs: logsEntries.map(([key, val]) => ({ key, ...val }))
-                    }));
+                    };
 
-                    // 2. Prepare the removal from main list
+                    deletePromises.push(set(ref(db, `trash/${trashId}`), backupData));
+
+                    // B. REMOVE FROM MAIN ATTENDANCE
                     logsEntries.forEach(([key]) => {
                         deletePromises.push(remove(ref(db, `attendance/${key}`)));
                     });
@@ -70,19 +80,22 @@ eraserBtn?.addEventListener('click', async () => {
             }
 
             try {
+                // WAIT for all Firebase operations to finish
                 await Promise.all(deletePromises);
-                alert("Success: Moved to Junk.");
+                alert("Success: Moved to Junk Bin.");
                 selectedAlbums.clear();
                 isSelectionMode = false;
                 eraserBtn.classList.remove('active');
-                processData(); 
+                processData(); // Refresh UI
             } catch (error) {
-                alert("Error: " + error.message);
+                console.error(error);
+                alert("Database Error: Could not complete deletion.");
             }
         } else if (pass !== null) {
             alert("Wrong Password.");
         }
     } else {
+        // Toggle selection mode
         isSelectionMode = !isSelectionMode;
         if (!isSelectionMode) selectedAlbums.clear();
         eraserBtn?.classList.toggle('active', isSelectionMode);
@@ -90,17 +103,17 @@ eraserBtn?.addEventListener('click', async () => {
     }
 });
 
-// --- 5. DATA RENDERING (Corrects Portal vs History View) ---
+// --- 5. DATA RENDERING (Portal vs History Fix) ---
 function processData(searchTerm = "") {
     const attRef = ref(db, 'attendance');
-    const portalTable = document.getElementById('attendanceTable'); // Used in index.html (Main Portal)
-    const historyTable = document.getElementById('historyTable');   // Used in history.html (Albums)
+    const portalTable = document.getElementById('attendanceTable'); 
+    const historyTable = document.getElementById('historyTable');   
     
     onValue(attRef, (snapshot) => {
         const data = snapshot.val();
         fullDataBuffer = data || {}; 
         
-        // --- VIEW 1: PARENT PORTAL (Simple List Rows: Name, Grade, Time) ---
+        // VIEW 1: MAIN PORTAL (Rows Only)
         if (portalTable) {
             portalTable.innerHTML = '';
             if (!data) return;
@@ -119,11 +132,11 @@ function processData(searchTerm = "") {
                 });
         }
 
-        // --- VIEW 2: SCAN HISTORY (Folder Albums) ---
+        // VIEW 2: HISTORY (Albums with Checkboxes)
         if (historyTable) {
             historyTable.innerHTML = '';
             if (!data) {
-                historyTable.innerHTML = '<p style="grid-column: 1/-1; text-align:center; opacity:0.5;">No history found.</p>';
+                historyTable.innerHTML = '<p style="grid-column: 1/-1; text-align:center; opacity:0.5; padding:20px;">Empty History</p>';
                 return;
             }
 
@@ -168,7 +181,7 @@ window.toggleSelect = (studentName) => {
     else selectedAlbums.add(studentName);
 };
 
-// --- 6. POPUP FOR INDIVIDUAL LOGS ---
+// --- 6. POPUP ---
 window.showPopUp = (name, logs) => {
     document.getElementById('modalStudentName').innerText = name;
     const list = document.getElementById('individualLogs');
@@ -194,4 +207,4 @@ document.getElementById('closeModal')?.addEventListener('click', () => {
     document.getElementById('historyModal').style.display = 'none';
 });
 
-processData();
+processData();s
