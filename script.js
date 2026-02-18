@@ -14,70 +14,68 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const tableBody = document.getElementById('attendanceTable');
+const panel = document.getElementById('panel');
 const nameInput = document.getElementById('nameInput');
-const searchBtn = document.getElementById('searchBtn');
-const searchBox = document.getElementById('searchBox');
 
-// --- 1. SEARCH ANIMATION LOGIC ---
-
-searchBtn.addEventListener('click', () => {
-    if (!searchBox.classList.contains('active')) {
-        searchBox.classList.add('active');
-        nameInput.focus();
-    } else {
-        // If it's already open, clear and close it
-        closeSearch();
-    }
-});
-
-// Auto-hide if user clicks away and input is empty
-nameInput.addEventListener('blur', () => {
-    if (nameInput.value.trim() === "") {
-        setTimeout(closeSearch, 200);
-    }
-});
-
-function closeSearch() {
-    searchBox.classList.remove('active');
-    nameInput.value = '';
-    performSearch(); // Refresh list to show all
+// --- NAVIGATION LOGIC WITH ROTATION ---
+const navBtn = document.getElementById('navToHistory') || document.getElementById('navToPortal');
+if (navBtn) {
+    navBtn.addEventListener('click', () => {
+        panel.classList.add('rotate-out');
+        const target = navBtn.id === 'navToHistory' ? 'history.html' : 'index.html';
+        setTimeout(() => { window.location.href = target; }, 500);
+    });
 }
 
-// --- 2. DATA FETCHING LOGIC ---
-
-function performSearch() {
-    const queryName = nameInput.value.trim().toLowerCase();
+// --- DATA FETCHING & COUNTING ---
+function loadData() {
     const attRef = ref(db, 'attendance');
+    const logsTable = document.getElementById('attendanceTable');
+    const historyTable = document.getElementById('historyTable');
 
     onValue(attRef, (snapshot) => {
         const data = snapshot.val();
-        tableBody.innerHTML = ''; 
+        if (!data) return;
+        const records = Object.values(data);
 
-        if (data) {
-            const records = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
-            
-            records.filter(r => r.displayName.toLowerCase().includes(queryName))
-            .forEach(log => {
-                const time = new Date(log.timestamp).toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
+        // PAGE 1: RECENT LOGS (index.html)
+        if (logsTable) {
+            logsTable.innerHTML = '';
+            const query = nameInput ? nameInput.value.toLowerCase() : "";
+            records.sort((a,b) => b.timestamp - a.timestamp)
+                .filter(r => r.displayName.toLowerCase().includes(query))
+                .forEach(log => {
+                    const time = new Date(log.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                    logsTable.innerHTML += `
+                        <div class="attendance-row">
+                            <span class="col-name">${log.displayName}</span>
+                            <span class="col-grade">${log.grade || 'N/A'}</span>
+                            <span class="col-time">${time}</span>
+                        </div>`;
                 });
+        }
 
-                const row = document.createElement('div');
-                row.className = 'attendance-row';
-                row.innerHTML = `
-                    <span class="col-name">${log.displayName}</span>
-                    <span class="col-grade">${log.grade || 'N/A'}</span>
-                    <span class="col-time">${time}</span>
-                `;
-                tableBody.appendChild(row);
+        // PAGE 2: HISTORY TOTALS (history.html)
+        if (historyTable) {
+            historyTable.innerHTML = '';
+            const counts = {};
+            records.forEach(log => {
+                const key = log.displayName;
+                if (!counts[key]) counts[key] = { grade: log.grade, total: 0 };
+                counts[key].total++;
             });
-        } else {
-            tableBody.innerHTML = '<p style="text-align:center; color:white; opacity:0.5; padding:20px;">No records yet.</p>';
+
+            Object.keys(counts).forEach(name => {
+                historyTable.innerHTML += `
+                    <div class="attendance-row history-grid">
+                        <span class="col-name">${name}</span>
+                        <span class="col-grade">${counts[name].grade || 'N/A'}</span>
+                        <span class="col-scans">${counts[name].total} Scans</span>
+                    </div>`;
+            });
         }
     });
 }
 
-nameInput.addEventListener('input', performSearch);
-performSearch();
+if (nameInput) nameInput.addEventListener('input', loadData);
+loadData();
