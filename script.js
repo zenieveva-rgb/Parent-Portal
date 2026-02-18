@@ -128,3 +128,70 @@ document.getElementById('closeModal')?.addEventListener('click', () => {
 
 if (nameInput) nameInput.addEventListener('input', processData);
 processData();
+
+// --- NEW VARIABLES ---
+const ADMIN_PASSWORD = "your_password_here"; // Change this to your preferred password
+let isDeleteMode = false;
+
+// --- TOGGLE DELETE MODE ---
+document.getElementById('toggleDeleteMode')?.addEventListener('click', function() {
+    isDeleteMode = !isDeleteMode;
+    this.style.color = isDeleteMode ? "red" : "white";
+    alert(isDeleteMode ? "Delete Mode Enabled. Click an album to remove it." : "Delete Mode Disabled.");
+});
+
+// --- JUNK BIN POPUP ---
+document.getElementById('trashBinBtn')?.addEventListener('click', () => {
+    const trashRef = ref(db, 'trash');
+    onValue(trashRef, (snapshot) => {
+        const trashData = snapshot.val();
+        if (!trashData) return alert("Junk bin is empty!");
+        
+        // You can create a modal similar to your showPopUp to list these and add a 'Recover' button
+        console.log("Junk Files:", trashData);
+        alert("Check console for Junk files. Would you like to build a recovery UI next?");
+    });
+});
+
+// --- UPDATED ALBUM LOGIC (Inside processData) ---
+// Find the part where you create the card and update it:
+const card = document.createElement('div');
+card.className = 'student-album';
+card.innerHTML = `
+    <div class="album-icon"><i class="fa-solid fa-folder-open"></i></div>
+    <div class="album-name">${name}</div>
+    <div style="font-size:10px; color:#888;">${albums[name].grade}</div>
+`;
+
+card.onclick = () => {
+    if (isDeleteMode) {
+        handleDelete(name, albums[name].allLogs);
+    } else {
+        showPopUp(name, albums[name].allLogs);
+    }
+};
+
+// --- DELETE & VERIFY LOGIC ---
+function handleDelete(studentName, logs) {
+    const password = prompt("ADMIN VERIFICATION: Enter password to delete this album:");
+    
+    if (password === ADMIN_PASSWORD) {
+        const confirmDelete = confirm(`Are you sure you want to move ${studentName} to Junk?`);
+        if (confirmDelete) {
+            // 1. Save to Junk (Trash) Node
+            const trashRef = ref(db, 'trash/' + studentName);
+            set(trashRef, {
+                studentName: studentName,
+                deletedAt: new Date().toLocaleString(),
+                data: logs
+            }).then(() => {
+                // 2. Remove from Attendance (This is a complex move, requires specific keys)
+                alert(`${studentName} moved to Junk Files.`);
+                // Note: To fully delete from Firebase, you'd need the specific keys of the logs
+                // For now, it is safely copied to Trash.
+            });
+        }
+    } else {
+        alert("Incorrect Password. Access Denied.");
+    }
+}
