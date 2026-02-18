@@ -188,3 +188,34 @@ body, html {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 10px; }
+
+/* Specific styling for the Live Monitor List */
+.student-name-cell {
+    font-weight: 600;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.grade-cell {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+}
+
+.time-cell {
+    color: var(--neon-cyan);
+    font-family: 'Courier New', monospace; /* Makes time easier to read */
+    font-weight: bold;
+}
+
+/* Ensure the grid doesn't collapse on small screens */
+.attendance-row {
+    grid-template-columns: 1.8fr 1fr 1.2fr; /* Optimized spacing */
+    gap: 5px;
+}
+
+/* Keep the Eraser button styling clean */
+#toggleDeleteMode {
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
