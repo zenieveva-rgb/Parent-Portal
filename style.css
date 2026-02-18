@@ -208,3 +208,20 @@ body, html {
     color: var(--neon-cyan);
     transform: scale(1.2);
 }
+#mainPanel {
+    will-change: transform, opacity;
+    transition: all 0.5s ease;
+}
+
+.action-btn {
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.3s ease;
+}
+
+.action-btn:active {
+    transform: scale(0.9);
+}
+
+.action-btn i {
+    pointer-events: none; /* This ensures clicking the icon inside the button still works */
+}
