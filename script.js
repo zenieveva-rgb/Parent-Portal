@@ -49,19 +49,26 @@ eraserBtn?.addEventListener('click', async () => {
         const pass = prompt(`VERIFY: Enter Password to move ${selectedAlbums.size} items to Junk:`);
         
         if (pass === ADMIN_PASSWORD) {
+            // Loop through selected students
             for (let name of selectedAlbums) {
-                const logs = Object.entries(fullDataBuffer).filter(([k, v]) => v.studentName === name);
-                const trashId = `trash_${Date.now()}_${name.replace(/\s+/g, '_')}`;
+                // Find all logs belonging to this name
+                const logsEntries = Object.entries(fullDataBuffer).filter(([k, v]) => v.studentName === name);
+                
+                if (logsEntries.length > 0) {
+                    const trashId = `trash_${Date.now()}_${name.replace(/\s+/g, '_')}`;
 
-                // Move to Trash Node
-                await set(ref(db, `trash/${trashId}`), {
-                    studentName: name,
-                    deletedAt: new Date().toLocaleString(),
-                    logs: logs.map(([key, val]) => ({ key, ...val }))
-                });
+                    // IMPORTANT: We send 'logs' so junk-logic.js can find them
+                    await set(ref(db, `trash/${trashId}`), {
+                        studentName: name,
+                        deletedAt: new Date().toLocaleString(),
+                        logs: logsEntries.map(([key, val]) => ({ key, ...val }))
+                    });
 
-                // Delete from Active Node
-                for (let [key] of logs) { await remove(ref(db, `attendance/${key}`)); }
+                    // Delete the original entries from 'attendance'
+                    for (let [key] of logsEntries) {
+                        await remove(ref(db, `attendance/${key}`));
+                    }
+                }
             }
             alert("Success: Moved to Junk.");
             selectedAlbums.clear();
@@ -70,12 +77,12 @@ eraserBtn?.addEventListener('click', async () => {
             alert("Wrong Password.");
         }
     } else {
-        // Otherwise, just toggle selection mode on/off
+        // Toggle selection mode UI
         isSelectionMode = !isSelectionMode;
         if (!isSelectionMode) selectedAlbums.clear();
     }
 
-    // Toggle red glow
+    // Toggle red glow/active state
     eraserBtn.classList.toggle('active', isSelectionMode);
     processData();
 });
@@ -95,7 +102,11 @@ function processData(searchTerm = "") {
         const data = snapshot.val();
         fullDataBuffer = data || {}; 
         table.innerHTML = '';
-        if (!data) return;
+        
+        if (!data) {
+            table.innerHTML = '<div style="text-align:center; padding:20px; opacity:0.5;">No records found.</div>';
+            return;
+        }
 
         const albums = {};
         Object.entries(data).forEach(([key, val]) => {
@@ -104,7 +115,9 @@ function processData(searchTerm = "") {
             albums[sName].logs.push({ key, ...val });
         });
 
-        Object.keys(albums).filter(name => name.toLowerCase().includes(searchTerm)).forEach(name => {
+        const filteredNames = Object.keys(albums).filter(name => name.toLowerCase().includes(searchTerm));
+
+        filteredNames.forEach(name => {
             const wrapper = document.createElement('div');
             wrapper.className = 'album-row-wrapper';
             
@@ -138,7 +151,7 @@ window.showPopUp = (name, logs) => {
         const item = document.createElement('div');
         item.className = 'attendance-row popup-grid';
         item.innerHTML = `
-            <span>${log.scannedAt || log.time}</span>
+            <span>${log.scannedAt || log.time || 'No Date'}</span>
             <div class="log-actions">
                 <button onclick="editLogEntry('${log.key}', '${log.studentName}')"><i class="fa-solid fa-pen"></i></button>
                 <button onclick="deleteLogEntry('${log.key}')"><i class="fa-solid fa-trash"></i></button>
@@ -149,7 +162,9 @@ window.showPopUp = (name, logs) => {
 };
 
 window.deleteLogEntry = (key) => {
-    if (prompt("ADMIN PASSWORD:") === ADMIN_PASSWORD) remove(ref(db, `attendance/${key}`));
+    if (prompt("ADMIN PASSWORD:") === ADMIN_PASSWORD) {
+        remove(ref(db, `attendance/${key}`));
+    }
 };
 
 window.editLogEntry = (key, currentName) => {
@@ -163,4 +178,5 @@ document.getElementById('closeModal')?.addEventListener('click', () => {
     document.getElementById('historyModal').style.display = 'none';
 });
 
+// Initial load
 processData();
