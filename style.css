@@ -160,3 +160,22 @@ body, html {
 
 .popup-grid { grid-template-columns: 1fr 1fr; }
 .close-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+
+.top-controls {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px;
+    gap: 20px;
+}
+
+.top-controls i {
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: 0.3s;
+    color: white;
+}
+
+.top-controls i:hover {
+    color: var(--neon-cyan);
+    transform: scale(1.2);
+}
