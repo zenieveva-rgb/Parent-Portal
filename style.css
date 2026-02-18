@@ -174,7 +174,36 @@ body, html {
     transition: 0.3s;
     color: white;
 }
+.top-controls-container {
+    display: flex;
+    justify-content: space-between; /* Puts back button on left, admin on right */
+    align-items: center;
+    padding: 10px 20px;
+    margin-bottom: 15px;
+}
 
+.admin-group {
+    display: flex;
+    gap: 20px;
+}
+
+.admin-group i {
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: #ffd700; /* Matching your gold theme */
+    transition: 0.3s;
+}
+
+.admin-group i:hover {
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 8px #ffd700);
+}
+
+/* Red glow when delete mode is active */
+#toggleDeleteMode.active {
+    color: #ff4d4d;
+    filter: drop-shadow(0 0 10px #ff4d4d);
+}
 .top-controls i:hover {
     color: var(--neon-cyan);
     transform: scale(1.2);
