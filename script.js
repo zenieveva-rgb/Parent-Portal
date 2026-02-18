@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
 import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
 
-// 1. Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBdlEvDlQ1qWr8xdL4bV25NW4RgcTajYqM",
     authDomain: "database-98a70.firebaseapp.com",
@@ -12,15 +11,41 @@ const firebaseConfig = {
     appId: "1:460345885965:web:8484da766b979a0eaf9c44"
 };
 
-// 2. Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// 3. Get HTML Elements
 const tableBody = document.getElementById('attendanceTable');
 const nameInput = document.getElementById('nameInput');
+const searchBtn = document.getElementById('searchBtn');
+const searchBox = document.getElementById('searchBox');
 
-// 4. Define the Function First (Para kilala na ito ng browser bago gamitin)
+// --- 1. SEARCH ANIMATION LOGIC ---
+
+searchBtn.addEventListener('click', () => {
+    if (!searchBox.classList.contains('active')) {
+        searchBox.classList.add('active');
+        nameInput.focus();
+    } else {
+        // If it's already open, clear and close it
+        closeSearch();
+    }
+});
+
+// Auto-hide if user clicks away and input is empty
+nameInput.addEventListener('blur', () => {
+    if (nameInput.value.trim() === "") {
+        setTimeout(closeSearch, 200);
+    }
+});
+
+function closeSearch() {
+    searchBox.classList.remove('active');
+    nameInput.value = '';
+    performSearch(); // Refresh list to show all
+}
+
+// --- 2. DATA FETCHING LOGIC ---
+
 function performSearch() {
     const queryName = nameInput.value.trim().toLowerCase();
     const attRef = ref(db, 'attendance');
@@ -30,7 +55,6 @@ function performSearch() {
         tableBody.innerHTML = ''; 
 
         if (data) {
-            // I-convert ang objects sa array at i-sort: Latest scan sa itaas
             const records = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
             
             records.filter(r => r.displayName.toLowerCase().includes(queryName))
@@ -55,25 +79,5 @@ function performSearch() {
     });
 }
 
-// 5. Add Event Listener (Makinig sa pag-type ng user)
 nameInput.addEventListener('input', performSearch);
-
-// 6. Initial Load (Para lumabas agad ang data pagbukas ng page)
 performSearch();
-
-// Get the new elements for animation
-const searchBtn = document.getElementById('searchBtn');
-const searchBox = document.querySelector('.search-box');
-
-// Toggle the 'active' class on click
-searchBtn.addEventListener('click', () => {
-    searchBox.classList.toggle('active');
-    
-    // Focus the input automatically when it opens
-    if (searchBox.classList.contains('active')) {
-        nameInput.focus();
-    } else {
-        nameInput.value = ''; // Optional: clear search when closing
-        performSearch(); // Refresh list
-    }
-});
