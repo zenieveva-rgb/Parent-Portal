@@ -43,12 +43,56 @@ body, html {
     text-shadow: 0 0 10px var(--neon-cyan);
 }
 
+/* Container styling */
 .search-box {
     display: flex;
+    align-items: center;
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 10px;
+    border-radius: 25px; /* Rounded look */
+    padding: 5px 15px;
     margin-bottom: 15px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+/* Glow when active */
+.search-box.active {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+}
+
+/* The Input: Hidden by default */
+#nameInput {
+    width: 0;
+    padding: 0;
+    flex: 0;
+    background: transparent;
+    border: none;
+    color: white;
+    outline: none;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s;
+    overflow: hidden;
+}
+
+/* When the container is active, expand the input */
+.search-box.active #nameInput {
+    width: 100%;
+    flex: 1;
+    padding: 10px;
+}
+
+/* The Icon */
+.search-icon {
+    cursor: pointer;
+    color: var(--neon-cyan);
+    font-size: 1.2rem;
+    transition: transform 0.5s ease;
+    padding: 5px;
+}
+
+/* Rotate the icon when active */
+.search-box.active .search-icon {
+    transform: rotate(360deg);
 }
 
 #nameInput {
