@@ -3,29 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parent Portal - History</title>
+    <title>Parent Portal | Scan History</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+    <div class="animated-bg history-theme"></div>
     <div class="page-background">
         <div class="main-container" id="mainPanel">
-            <h1 class="portal-title">TOTAL SCANS</h1>
+            <div class="glass-header">
+                <h1 class="portal-title gold-text">SCAN ARCHIVE</h1>
+                <div class="status-indicator gold-border">
+                    <i class="fa-solid fa-database"></i> 12H ARCHIVE
+                </div>
+            </div>
 
             <div class="top-controls">
-                <button id="navToPortal" class="action-btn">
+                <button id="navToPortal" class="action-btn gold-btn">
                     <i class="fa-solid fa-arrow-left"></i>
                 </button>
             </div>
 
-            <div class="table-header history-grid">
-                <span>FULLNAME</span>
-                <span>GRADE/SEC</span>
-                <span>SCANS</span>
-            </div>
-
-            <div class="attendance-list" id="historyTable">
+            <div class="table-container">
+                <div class="table-header history-grid">
+                    <span>STUDENT</span>
+                    <span>GRADE</span>
+                    <span>TOTAL SCANS</span>
                 </div>
+                <div class="attendance-list" id="historyTable"></div>
+            </div>
         </div>
     </div>
 
