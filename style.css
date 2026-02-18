@@ -118,3 +118,45 @@ body, html {
     transform: rotateY(90deg);
     opacity: 0;
 }
+/* History Album Grid */
+.attendance-list.album-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 15px;
+    padding: 10px;
+}
+
+.student-album {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--neon-gold);
+    border-radius: 15px;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.student-album:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 215, 0, 0.1);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+}
+
+.album-icon { font-size: 2rem; color: var(--neon-gold); margin-bottom: 10px; }
+.album-name { font-size: 12px; font-weight: bold; text-transform: uppercase; }
+
+/* Pop-up (Modal) Styles */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+    display: none; justify-content: center; align-items: center; z-index: 1000;
+}
+
+.modal-content {
+    width: 90%; max-width: 400px; max-height: 70vh;
+    background: var(--deep-bg); border: 2px solid var(--neon-cyan);
+    border-radius: 20px; padding: 20px; overflow-y: auto;
+}
+
+.popup-grid { grid-template-columns: 1fr 1fr; }
+.close-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
