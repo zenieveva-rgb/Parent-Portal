@@ -21,40 +21,43 @@ let isSelectionMode = false;
 let selectedAlbums = new Set();
 let fullDataBuffer = {}; 
 
-// --- 3. NAVIGATION ---
+// --- 3. NAVIGATION (THE UNFREEZE FIX) ---
 function smoothNavigate(url) {
-    const panel = document.getElementById('mainPanel');
+    const panel = document.getElementById('mainPanel') || document.getElementById('junkPanel');
     if (panel) {
-        panel.style.transition = "all 0.5s ease";
-        panel.style.transform = "scale(0.9) opacity(0)";
+        panel.style.transition = "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
+        panel.style.transform = "scale(0.9) translateY(20px)";
+        panel.style.opacity = "0";
+        panel.style.filter = "blur(10px)";
+        setTimeout(() => { window.location.href = url; }, 500);
+    } else {
+        window.location.href = url; // Fallback if panel not found
     }
-    setTimeout(() => { window.location.href = url; }, 500);
 }
 
+// Attach listeners safely
+document.getElementById('navToHistory')?.addEventListener('click', () => smoothNavigate('history.html'));
 document.getElementById('trashBinBtn')?.addEventListener('click', () => smoothNavigate('junk.html'));
-document.getElementById('navToPortal')?.addEventListener('click', () => smoothNavigate('index.html'));
+document.getElementById('navToPortal')?.addEventListener('click', () => smoothNavigate('history.html')); 
 
-// --- 4. SELECTION & DELETE LOGIC ---
+// --- 4. SEARCH LOGIC ---
+document.getElementById('nameInput')?.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    processData(searchTerm);
+});
+
+// --- 5. SELECTION & DELETE LOGIC ---
 const eraserBtn = document.getElementById('toggleDeleteMode');
 const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
 
-// When clicking the Eraser Icon
 eraserBtn?.addEventListener('click', () => {
     isSelectionMode = !isSelectionMode;
-    
-    // Toggle Visuals
     eraserBtn.classList.toggle('active', isSelectionMode);
-    if (bulkDeleteBtn) {
-        bulkDeleteBtn.style.display = isSelectionMode ? "block" : "none";
-    }
-
-    if (!isSelectionMode) {
-        selectedAlbums.clear(); // Clear selections if exiting mode
-    }
+    if (bulkDeleteBtn) bulkDeleteBtn.style.display = isSelectionMode ? "block" : "none";
+    if (!isSelectionMode) selectedAlbums.clear();
     processData(); 
 });
 
-// Handle Checkbox Toggles
 window.toggleSelect = (studentName) => {
     if (selectedAlbums.has(studentName)) {
         selectedAlbums.delete(studentName);
@@ -63,130 +66,94 @@ window.toggleSelect = (studentName) => {
     }
 };
 
-// The Verification & Delete Process
 bulkDeleteBtn?.addEventListener('click', async () => {
-    if (selectedAlbums.size === 0) return alert("Please select at least one student.");
-    
-    // 1. Verify Identity
-    const pass = prompt(`CONFIRMATION: Enter Admin Password to move ${selectedAlbums.size} items to Junk:`);
-    
+    if (selectedAlbums.size === 0) return alert("Select at least one.");
+    const pass = prompt(`Enter Password to move ${selectedAlbums.size} items to Junk:`);
     if (pass === ADMIN_PASSWORD) {
-        const confirmAction = confirm(`Are you sure you want to move selected students to the Junk Bin?`);
-        
-        if (confirmAction) {
-            for (let name of selectedAlbums) {
-                // Filter all log entries for this specific student
-                const studentLogs = Object.entries(fullDataBuffer)
-                    .filter(([key, val]) => val.studentName === name);
-
-                const trashId = `trash_${Date.now()}_${name.replace(/\s+/g, '_')}`;
-                
-                // 2. Backup to 'trash' node
-                await set(ref(db, `trash/${trashId}`), {
-                    studentName: name,
-                    deletedAt: new Date().toLocaleString(),
-                    logs: studentLogs.map(([key, val]) => ({ key, ...val }))
-                });
-
-                // 3. Remove from 'attendance' node
-                for (let [key] of studentLogs) {
-                    await remove(ref(db, `attendance/${key}`));
-                }
-            }
-            
-            alert("Success: Moved to Junk.");
-            selectedAlbums.clear();
-            isSelectionMode = false;
-            bulkDeleteBtn.style.display = "none";
-            processData();
+        for (let name of selectedAlbums) {
+            const logs = Object.entries(fullDataBuffer).filter(([k, v]) => v.studentName === name);
+            const trashId = `trash_${Date.now()}_${name.replace(/\s+/g, '_')}`;
+            await set(ref(db, `trash/${trashId}`), {
+                studentName: name,
+                deletedAt: new Date().toLocaleString(),
+                logs: logs.map(([key, val]) => ({ key, ...val }))
+            });
+            for (let [key] of logs) { await remove(ref(db, `attendance/${key}`)); }
         }
-    } else {
-        alert("Verification Failed: Incorrect Password.");
+        alert("Moved to Junk.");
+        selectedAlbums.clear();
+        isSelectionMode = false;
+        bulkDeleteBtn.style.display = "none";
+        processData();
     }
 });
 
-// --- 5. RENDER DATA ---
-function processData() {
+// --- 6. DATA RENDERING ---
+function processData(filter = "") {
     const attRef = ref(db, 'attendance');
-    const historyBody = document.getElementById('historyTable');
+    const table = document.getElementById('attendanceTable') || document.getElementById('historyTable');
+    if (!table) return;
 
     onValue(attRef, (snapshot) => {
         const data = snapshot.val();
         fullDataBuffer = data || {}; 
-        if (!historyBody) return;
-        historyBody.innerHTML = '';
-        
-        if (!data) {
-            historyBody.innerHTML = '<div style="text-align:center; padding:20px; opacity:0.5;">Archive is empty.</div>';
-            return;
-        }
+        table.innerHTML = '';
+        if (!data) return;
 
         const albums = {};
         Object.entries(data).forEach(([key, val]) => {
             const sName = val.studentName || "Unknown";
-            if (!albums[sName]) albums[sName] = { grade: val.grade, logs: [] };
+            if (!albums[sName]) albums[sName] = { grade: val.grade, logs: [], lastTime: val.time || val.scannedAt };
             albums[sName].logs.push({ key, ...val });
         });
 
-        Object.keys(albums).forEach(name => {
+        Object.keys(albums).filter(name => name.toLowerCase().includes(filter)).forEach(name => {
             const container = document.createElement('div');
             container.className = 'album-row-wrapper';
+            const checkboxHTML = isSelectionMode ? `<input type="checkbox" onchange="toggleSelect('${name}')" ${selectedAlbums.has(name) ? 'checked' : ''}>` : '';
             
-            // Show Checkbox only in Selection Mode
-            const checkboxHTML = isSelectionMode ? 
-                `<input type="checkbox" class="album-checkbox" onchange="toggleSelect('${name}')" ${selectedAlbums.has(name) ? 'checked' : ''}>` : '';
-            
-            container.innerHTML = `
+            // Layout changes if it's the index table vs history table
+            const isHistoryPage = !!document.getElementById('historyTable');
+
+            container.innerHTML = isHistoryPage ? `
                 ${checkboxHTML}
                 <div class="student-album">
-                    <div class="album-icon"><i class="fa-solid fa-folder"></i></div>
                     <div class="album-name">${name}</div>
                     <div class="album-sub">${albums[name].grade}</div>
-                    <div class="total-scans">${albums[name].logs.length} Total</div>
+                    <div class="total-scans">${albums[name].logs.length} Scans</div>
+                </div>
+            ` : `
+                <div class="attendance-row">
+                    <span>${name}</span>
+                    <span class="text-center">${albums[name].grade}</span>
+                    <span class="text-right">${albums[name].lastTime}</span>
                 </div>
             `;
             
-            // Click to view logs (only if NOT in selection mode)
-            container.querySelector('.student-album').onclick = () => {
-                if (!isSelectionMode) showPopUp(name, albums[name].logs);
-            };
-            historyBody.appendChild(container);
+            const clickable = container.querySelector('.student-album') || container.querySelector('.attendance-row');
+            clickable.onclick = () => { if (!isSelectionMode && isHistoryPage) showPopUp(name, albums[name].logs); };
+            table.appendChild(container);
         });
     });
 }
 
-// --- 6. POPUP & INDIVIDUAL ACTIONS ---
+// --- 7. MODALS ---
 window.showPopUp = (name, logs) => {
     const list = document.getElementById('individualLogs');
     document.getElementById('modalStudentName').innerText = name;
+    if (!list) return;
     list.innerHTML = '';
-
     logs.forEach(log => {
         const item = document.createElement('div');
         item.className = 'attendance-row popup-grid';
-        item.innerHTML = `
-            <span>${log.scannedAt}</span>
+        item.innerHTML = `<span>${log.scannedAt || log.time}</span>
             <div class="log-actions">
                 <button onclick="editLogEntry('${log.key}', '${log.studentName}')"><i class="fa-solid fa-pen"></i></button>
                 <button onclick="deleteLogEntry('${log.key}')"><i class="fa-solid fa-trash"></i></button>
-            </div>
-        `;
+            </div>`;
         list.appendChild(item);
     });
     document.getElementById('historyModal').style.display = 'flex';
-};
-
-window.deleteLogEntry = (key) => {
-    if (prompt("ADMIN VERIFICATION:") === ADMIN_PASSWORD) {
-        remove(ref(db, `attendance/${key}`));
-    }
-};
-
-window.editLogEntry = (key, currentName) => {
-    const newName = prompt("Edit Name:", currentName);
-    if (newName && prompt("ADMIN VERIFICATION:") === ADMIN_PASSWORD) {
-        update(ref(db, `attendance/${key}`), { studentName: newName });
-    }
 };
 
 document.getElementById('closeModal')?.addEventListener('click', () => {
@@ -194,33 +161,3 @@ document.getElementById('closeModal')?.addEventListener('click', () => {
 });
 
 processData();
-// --- NAVIGATION & ANIMATION LOGIC ---
-
-function smoothNavigate(url) {
-    const panel = document.getElementById('mainPanel');
-    
-    if (panel) {
-        // Apply smooth zoom-out and fade effect
-        panel.style.transition = "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
-        panel.style.transform = "scale(0.9) translateY(20px)";
-        panel.style.opacity = "0";
-        panel.style.filter = "blur(10px)";
-    }
-
-    // Wait for animation to finish before switching pages
-    setTimeout(() => {
-        window.location.href = url;
-    }, 500);
-}
-
-// History Icon Click
-document.getElementById('navToHistory')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    smoothNavigate('history.html');
-});
-
-// Junk Icon Click
-document.getElementById('trashBinBtn')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    smoothNavigate('junk.html');
-});
