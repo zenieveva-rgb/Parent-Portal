@@ -21,128 +21,145 @@ let isSelectionMode = false;
 let selectedAlbums = new Set();
 let fullDataBuffer = {}; 
 
-// --- 3. NAVIGATION & SEARCH ---
+// --- 3. NAVIGATION ---
 function smoothNavigate(url) {
     const panel = document.getElementById('mainPanel');
     if (panel) {
         panel.style.transition = "all 0.5s ease";
-        panel.style.transform = "scale(0.9) translateY(20px)";
-        panel.style.opacity = "0";
+        panel.style.transform = "scale(0.9) opacity(0)";
     }
     setTimeout(() => { window.location.href = url; }, 500);
 }
 
-document.getElementById('navToPortal')?.addEventListener('click', () => smoothNavigate('index.html'));
-document.getElementById('trashBinBtn')?.addEventListener('click', () => smoothNavigate('junk.html'));
 document.getElementById('navToHistory')?.addEventListener('click', () => smoothNavigate('history.html'));
+document.getElementById('trashBinBtn')?.addEventListener('click', () => smoothNavigate('junk.html'));
+document.getElementById('navToPortal')?.addEventListener('click', () => smoothNavigate('index.html'));
 
+// Search Input Logic
 document.getElementById('nameInput')?.addEventListener('input', (e) => {
     processData(e.target.value.toLowerCase());
 });
 
-// --- 4. THE EASY DELETE (ERASER LOGIC) ---
+// --- 4. IMPROVED DELETE (ERASER) LOGIC ---
 const eraserBtn = document.getElementById('toggleDeleteMode');
 
 eraserBtn?.addEventListener('click', async () => {
-    // If we are in selection mode AND items are picked, clicking eraser DELETEs
     if (isSelectionMode && selectedAlbums.size > 0) {
-        const pass = prompt(`VERIFY: Enter Password to move ${selectedAlbums.size} items to Junk:`);
+        const pass = prompt(`Enter Password to move ${selectedAlbums.size} items to Junk:`);
         
         if (pass === ADMIN_PASSWORD) {
-            // Loop through selected students
+            // We use a "For...Of" loop with await to ensure Firebase finishes each step
             for (let name of selectedAlbums) {
-                // Find all logs belonging to this name
                 const logsEntries = Object.entries(fullDataBuffer).filter(([k, v]) => v.studentName === name);
                 
                 if (logsEntries.length > 0) {
                     const trashId = `trash_${Date.now()}_${name.replace(/\s+/g, '_')}`;
 
-                    // IMPORTANT: We send 'logs' so junk-logic.js can find them
+                    // 1. Move to Junk Bin First
                     await set(ref(db, `trash/${trashId}`), {
                         studentName: name,
                         deletedAt: new Date().toLocaleString(),
                         logs: logsEntries.map(([key, val]) => ({ key, ...val }))
                     });
 
-                    // Delete the original entries from 'attendance'
+                    // 2. ONLY THEN Delete from active attendance
                     for (let [key] of logsEntries) {
                         await remove(ref(db, `attendance/${key}`));
                     }
                 }
             }
-            alert("Success: Moved to Junk.");
+            alert("Moved to Junk Bin successfully.");
             selectedAlbums.clear();
             isSelectionMode = false;
+            eraserBtn.classList.remove('active');
+            processData();
         } else if (pass !== null) {
-            alert("Wrong Password.");
+            alert("Incorrect Password.");
         }
     } else {
-        // Toggle selection mode UI
         isSelectionMode = !isSelectionMode;
         if (!isSelectionMode) selectedAlbums.clear();
+        eraserBtn?.classList.toggle('active', isSelectionMode);
+        processData();
     }
-
-    // Toggle red glow/active state
-    eraserBtn.classList.toggle('active', isSelectionMode);
-    processData();
 });
+
+// --- 5. RENDER DATA (FIXED FOR PORTAL VS HISTORY) ---
+function processData(searchTerm = "") {
+    const attRef = ref(db, 'attendance');
+    const portalTable = document.getElementById('attendanceTable'); // For index.html
+    const historyTable = document.getElementById('historyTable');   // For history.html
+    
+    onValue(attRef, (snapshot) => {
+        const data = snapshot.val();
+        fullDataBuffer = data || {}; 
+        
+        // --- LOGIC FOR MAIN PARENT PORTAL (index.html) ---
+        if (portalTable) {
+            portalTable.innerHTML = '';
+            if (!data) return;
+
+            Object.entries(data)
+                .filter(([key, val]) => val.studentName?.toLowerCase().includes(searchTerm))
+                .reverse() // Latest scans at the top
+                .forEach(([key, val]) => {
+                    const row = document.createElement('div');
+                    row.className = 'attendance-row';
+                    row.innerHTML = `
+                        <span>${val.studentName || "Unknown"}</span>
+                        <span class="text-center">${val.grade || "N/A"}</span>
+                        <span class="text-right">${val.time || val.scannedAt || "No Time"}</span>
+                    `;
+                    portalTable.appendChild(row);
+                });
+        }
+
+        // --- LOGIC FOR SCAN HISTORY (history.html) ---
+        if (historyTable) {
+            historyTable.innerHTML = '';
+            if (!data) return;
+
+            const albums = {};
+            Object.entries(data).forEach(([key, val]) => {
+                const sName = val.studentName || "Unknown";
+                if (!albums[sName]) albums[sName] = { grade: val.grade, logs: [] };
+                albums[sName].logs.push({ key, ...val });
+            });
+
+            Object.keys(albums)
+                .filter(name => name.toLowerCase().includes(searchTerm))
+                .forEach(name => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'album-row-wrapper';
+                    
+                    const checkboxHTML = isSelectionMode ? 
+                        `<input type="checkbox" class="album-checkbox" onchange="toggleSelect('${name}')" ${selectedAlbums.has(name) ? 'checked' : ''}>` : '';
+
+                    wrapper.innerHTML = `
+                        ${checkboxHTML}
+                        <div class="student-album">
+                            <div class="album-icon"><i class="fa-solid fa-folder"></i></div>
+                            <div class="album-name">${name}</div>
+                            <div class="album-sub">${albums[name].grade}</div>
+                            <div class="total-scans">${albums[name].logs.length} Total</div>
+                        </div>
+                    `;
+                    
+                    wrapper.querySelector('.student-album').onclick = () => {
+                        if (!isSelectionMode) showPopUp(name, albums[name].logs);
+                    };
+                    historyTable.appendChild(wrapper);
+                });
+        }
+    });
+}
 
 window.toggleSelect = (studentName) => {
     if (selectedAlbums.has(studentName)) selectedAlbums.delete(studentName);
     else selectedAlbums.add(studentName);
 };
 
-// --- 5. RENDER DATA ---
-function processData(searchTerm = "") {
-    const attRef = ref(db, 'attendance');
-    const table = document.getElementById('historyTable') || document.getElementById('attendanceTable');
-    if (!table) return;
-
-    onValue(attRef, (snapshot) => {
-        const data = snapshot.val();
-        fullDataBuffer = data || {}; 
-        table.innerHTML = '';
-        
-        if (!data) {
-            table.innerHTML = '<div style="text-align:center; padding:20px; opacity:0.5;">No records found.</div>';
-            return;
-        }
-
-        const albums = {};
-        Object.entries(data).forEach(([key, val]) => {
-            const sName = val.studentName || "Unknown";
-            if (!albums[sName]) albums[sName] = { grade: val.grade, logs: [] };
-            albums[sName].logs.push({ key, ...val });
-        });
-
-        const filteredNames = Object.keys(albums).filter(name => name.toLowerCase().includes(searchTerm));
-
-        filteredNames.forEach(name => {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'album-row-wrapper';
-            
-            const checkboxHTML = isSelectionMode ? 
-                `<input type="checkbox" class="album-checkbox" onchange="toggleSelect('${name}')" ${selectedAlbums.has(name) ? 'checked' : ''}>` : '';
-
-            wrapper.innerHTML = `
-                ${checkboxHTML}
-                <div class="student-album">
-                    <div class="album-icon"><i class="fa-solid fa-folder"></i></div>
-                    <div class="album-name">${name}</div>
-                    <div class="album-sub">${albums[name].grade}</div>
-                    <div class="total-scans">${albums[name].logs.length} Total</div>
-                </div>
-            `;
-            
-            wrapper.querySelector('.student-album').onclick = () => {
-                if (!isSelectionMode) showPopUp(name, albums[name].logs);
-            };
-            table.appendChild(wrapper);
-        });
-    });
-}
-
-// --- 6. MODAL ACTIONS ---
+// --- 6. POPUP LOGIC ---
 window.showPopUp = (name, logs) => {
     document.getElementById('modalStudentName').innerText = name;
     const list = document.getElementById('individualLogs');
@@ -151,7 +168,7 @@ window.showPopUp = (name, logs) => {
         const item = document.createElement('div');
         item.className = 'attendance-row popup-grid';
         item.innerHTML = `
-            <span>${log.scannedAt || log.time || 'No Date'}</span>
+            <span>${log.scannedAt || log.time}</span>
             <div class="log-actions">
                 <button onclick="editLogEntry('${log.key}', '${log.studentName}')"><i class="fa-solid fa-pen"></i></button>
                 <button onclick="deleteLogEntry('${log.key}')"><i class="fa-solid fa-trash"></i></button>
@@ -162,14 +179,12 @@ window.showPopUp = (name, logs) => {
 };
 
 window.deleteLogEntry = (key) => {
-    if (prompt("ADMIN PASSWORD:") === ADMIN_PASSWORD) {
-        remove(ref(db, `attendance/${key}`));
-    }
+    if (prompt("VERIFY ADMIN:") === ADMIN_PASSWORD) remove(ref(db, `attendance/${key}`));
 };
 
 window.editLogEntry = (key, currentName) => {
     const newName = prompt("Edit Name:", currentName);
-    if (newName && prompt("ADMIN PASSWORD:") === ADMIN_PASSWORD) {
+    if (newName && prompt("VERIFY ADMIN:") === ADMIN_PASSWORD) {
         update(ref(db, `attendance/${key}`), { studentName: newName });
     }
 };
@@ -178,5 +193,4 @@ document.getElementById('closeModal')?.addEventListener('click', () => {
     document.getElementById('historyModal').style.display = 'none';
 });
 
-// Initial load
 processData();
