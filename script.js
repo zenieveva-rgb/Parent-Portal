@@ -96,23 +96,19 @@ eraserBtn?.addEventListener('click', async () => {
 // --- 5. RENDER LOGIC: PORTAL (ROWS) vs HISTORY (ALBUMS) ---
 function processData(searchTerm = "") {
     const attRef = ref(db, 'attendance');
-    const portalTable = document.getElementById('attendanceTable'); // Used in index.html
-    const historyTable = document.getElementById('historyTable');   // Used in history.html
+    const portalTable = document.getElementById('attendanceTable'); // Only exists in index.html
+    const historyTable = document.getElementById('historyTable');   // Only exists in history.html
     
     onValue(attRef, (snapshot) => {
         const data = snapshot.val();
         fullDataBuffer = data || {}; 
         
-        // --- VIEW A: LIVE MONITOR (Parent Portal) ---
-        // Shows only the raw list of recent scans: Name, Grade, and Time
+        // --- VIEW A: PARENT PORTAL (Live Monitor List) ---
         if (portalTable) {
             portalTable.innerHTML = '';
-            if (!data) {
-                portalTable.innerHTML = '<p style="text-align:center; opacity:0.5; margin-top:20px;">No Recent Scans</p>';
-                return;
-            }
-
-            // Convert to array and reverse to show latest scan first
+            if (!data) return;
+            
+            // Convert to array and reverse to show the latest scan at the top
             Object.entries(data)
                 .filter(([k, v]) => v.studentName?.toLowerCase().includes(searchTerm))
                 .reverse() 
@@ -120,16 +116,15 @@ function processData(searchTerm = "") {
                     const row = document.createElement('div');
                     row.className = 'attendance-row';
                     row.innerHTML = `
-                        <span style="font-weight: 600;">${val.studentName}</span>
-                        <span class="text-center">${val.grade || 'N/A'}</span>
-                        <span class="text-right" style="color: var(--neon-cyan);">${val.time || val.scannedAt || '--:--'}</span>
+                        <span class="student-name-cell">${val.studentName}</span>
+                        <span class="text-center grade-cell">${val.grade || 'N/A'}</span>
+                        <span class="text-right time-cell">${val.time || val.scannedAt}</span>
                     `;
                     portalTable.appendChild(row);
                 });
         }
 
-        // --- VIEW B: SCAN ARCHIVE (History) ---
-        // Groups scans by student into "Folders/Albums"
+        // --- VIEW B: SCAN ARCHIVE (History Albums) ---
         if (historyTable) {
             historyTable.innerHTML = '';
             if (!data) {
@@ -137,26 +132,20 @@ function processData(searchTerm = "") {
                 return;
             }
 
-            // Grouping logic for Albums
             const albums = {};
             Object.entries(data).forEach(([key, val]) => {
-                const sName = val.studentName || "Unknown Student";
-                if (!albums[sName]) {
-                    albums[sName] = { 
-                        grade: val.grade || 'N/A', 
-                        logs: [] 
-                    };
-                }
+                const sName = val.studentName || "Unknown";
+                if (!albums[sName]) albums[sName] = { grade: val.grade, logs: [] };
                 albums[sName].logs.push({ key, ...val });
             });
 
-            // Render Albums
             Object.keys(albums)
                 .filter(name => name.toLowerCase().includes(searchTerm))
                 .forEach(name => {
                     const wrapper = document.createElement('div');
                     wrapper.className = 'album-row-wrapper';
                     
+                    // The Eraser/Delete Mode logic remains untouched here
                     const checkboxHTML = isSelectionMode ? 
                         `<input type="checkbox" class="album-checkbox" onchange="toggleSelect('${name}')" ${selectedAlbums.has(name) ? 'checked' : ''}>` : '';
 
@@ -165,12 +154,11 @@ function processData(searchTerm = "") {
                         <div class="student-album">
                             <div class="album-icon"><i class="fa-solid fa-folder"></i></div>
                             <div class="album-name">${name}</div>
-                            <div class="album-sub">Grade: ${albums[name].grade}</div>
-                            <div class="total-scans">${albums[name].logs.length} Total Logs</div>
+                            <div class="album-sub">${albums[name].grade || 'N/A'}</div>
+                            <div class="total-scans">${albums[name].logs.length} Scans</div>
                         </div>
                     `;
                     
-                    // Click to open logs (only if not in delete mode)
                     wrapper.querySelector('.student-album').onclick = () => {
                         if (!isSelectionMode) showPopUp(name, albums[name].logs);
                     };
