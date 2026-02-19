@@ -1,26 +1,32 @@
+/* REPLACE THIS BLOCK */
 body, html {
     margin: 0; 
     padding: 0;
     width: 100%; 
     height: 100%;
     font-family: 'Segoe UI', Roboto, sans-serif;
-    /* REMOVE THE SOLID BACKGROUND COLOR HERE */
-    background: transparent; 
     color: white;
-    overflow: hidden;
+    /* Forces everything to be transparent so the image shows through */
+    background-color: #0b0e14; 
 }
 
+/* REPLACE THIS BLOCK */
 .animated-bg {
     position: fixed; 
     top: 0;
     left: 0;
     width: 100%; 
     height: 100%;
-    /* Ensure the path is just the filename */
-    background: linear-gradient(rgba(11, 14, 20, 0.75), rgba(11, 14, 20, 0.75)), 
+    /* We use a slightly lighter overlay (0.65) so the image is visible */
+    background: linear-gradient(rgba(11, 14, 20, 0.65), rgba(11, 14, 20, 0.65)), 
                 url('bg.png') no-repeat center center fixed;
     background-size: cover;
-    z-index: -1; /* Keeps it behind everything */
+    z-index: -1; 
+}
+
+/* ADD THIS: This ensures the wrapper doesn't have a solid color */
+.page-background {
+    background: transparent !important;
 }
 /* Header & Controls */
 .glass-header { text-align: left; margin-bottom: 20px; }
