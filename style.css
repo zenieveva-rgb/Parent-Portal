@@ -1,42 +1,27 @@
-:root {
-    --neon-cyan: #00E5FF;
-    --neon-gold: #ffd700;
-    --neon-red: #ff4d4d;
-    --neon-green: #00ff88;
-    /* Adjusted glass transparency for better visibility of the BG image */
-    --glass: rgba(15, 20, 25, 0.7); 
-    --deep-bg: #0b0e14;
+body, html {
+    margin: 0; 
+    padding: 0;
+    width: 100%; 
+    height: 100%;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    /* REMOVE THE SOLID BACKGROUND COLOR HERE */
+    background: transparent; 
+    color: white;
+    overflow: hidden;
 }
 
 .animated-bg {
     position: fixed; 
+    top: 0;
+    left: 0;
     width: 100%; 
     height: 100%;
-    /* Dark overlay (0.75) ensures the neon text remains sharp */
+    /* Ensure the path is just the filename */
     background: linear-gradient(rgba(11, 14, 20, 0.75), rgba(11, 14, 20, 0.75)), 
                 url('bg.png') no-repeat center center fixed;
     background-size: cover;
-    z-index: -1;
+    z-index: -1; /* Keeps it behind everything */
 }
-
-.main-container {
-    width: 100%;
-    max-width: 450px;
-    height: 90vh;
-    /* Semi-transparent dark base */
-    background: rgba(15, 20, 25, 0.4); 
-    /* The magic "Frosted Glass" effect */
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 25px;
-    padding: 20px;
-    display: flex; 
-    flex-direction: column;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
-    transition: all 0.5s ease;
-}
-
 /* Header & Controls */
 .glass-header { text-align: left; margin-bottom: 20px; }
 .portal-title { font-size: 1.5rem; letter-spacing: 2px; margin: 0; color: white; }
