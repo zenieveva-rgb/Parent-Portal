@@ -230,3 +230,27 @@ document.getElementById('exportCSV')?.addEventListener('click', () => {
     link.click(); // Trigger download
     document.body.removeChild(link);
 });
+// --- 7. EXPORT TO CSV ---
+document.getElementById('exportCSV')?.addEventListener('click', () => {
+    if (!fullDataBuffer || Object.keys(fullDataBuffer).length === 0) {
+        alert("No data to export.");
+        return;
+    }
+
+    let csvContent = "data:text/csv;charset=utf-8,Student Name,Grade,Date,Time\n";
+
+    Object.values(fullDataBuffer).forEach(record => {
+        const name = record.studentName || "Unknown";
+        const grade = record.grade || "N/A";
+        const time = record.time || record.scannedAt || "--:--";
+        const date = record.date || new Date().toLocaleDateString();
+        csvContent += `"${name}","${grade}","${date}","${time}"\n`;
+    });
+
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", "Attendance_Report.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+});
