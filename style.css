@@ -44,21 +44,6 @@ body, html {
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Glass Header */
-.glass-header {
-    text-align: left;
-    margin-bottom: 20px;
-}
-
-.portal-title {
-    font-size: 1.5rem;
-    letter-spacing: 2px;
-    margin: 0;
-    color: white;
-}
-
-.gold-text { color: var(--neon-gold); }
-
 /* Top Controls & Navigation */
 .top-controls, .top-controls-container {
     display: flex;
@@ -97,7 +82,7 @@ body, html {
     border: 1px solid rgba(255,255,255,0.1);
     padding: 5px 12px; 
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    width: 35px; /* Initial hidden width */
+    width: 35px;
     height: 35px;
     overflow: hidden;
 }
@@ -123,21 +108,11 @@ body, html {
     margin-right: 10px;
 }
 
-.search-trigger, .search-icon {
-    cursor: pointer;
-    color: var(--neon-cyan);
-}
-
 /* Eraser Active Glow */
 #toggleDeleteMode.active {
     color: var(--neon-red) !important;
     transform: scale(1.2);
     filter: drop-shadow(0 0 10px var(--neon-red));
-}
-
-.admin-group i:hover, .action-btn:hover {
-    color: var(--neon-cyan);
-    transform: scale(1.1);
 }
 
 /* Tables & Lists */
@@ -166,74 +141,60 @@ body, html {
     transition: background 0.2s;
 }
 
-.text-center { text-align: center; }
-.text-right { text-align: right; }
-
-/* History Album Styles */
-.history-grid {
-    grid-template-columns: 1fr 1fr 1fr; /* Custom header for history folders */
+/* History Grid (3 Folders per row) */
+#historyTable {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 10px 0;
 }
 
 .album-row-wrapper {
     display: flex;
-    flex-direction: row;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: 8px;
 }
 
 .student-album {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 215, 0, 0.3);
     border-radius: 15px;
-    padding: 15px;
+    padding: 12px;
     text-align: center;
     cursor: pointer;
     transition: 0.3s;
-    flex-grow: 1;
+    width: 100%;
 }
 
 .student-album:hover {
-    transform: translateY(-5px);
+    transform: translateY(-3px);
     background: rgba(255, 215, 0, 0.1);
     border-color: var(--neon-gold);
 }
 
-.album-icon { font-size: 2rem; color: var(--neon-gold); margin-bottom: 8px; }
-.album-name { font-size: 12px; font-weight: bold; }
-.album-sub { font-size: 10px; opacity: 0.7; }
-.total-scans { font-size: 10px; color: var(--neon-cyan); margin-top: 5px; }
+.album-icon { font-size: 1.8rem; color: var(--neon-gold); margin-bottom: 5px; }
+.album-name { font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.album-sub { font-size: 9px; opacity: 0.7; }
+.total-scans { font-size: 9px; color: var(--neon-cyan); margin-top: 4px; }
 
-.album-checkbox {
-    width: 22px; height: 22px;
-    cursor: pointer;
-    accent-color: var(--neon-red);
+/* No Results Styling */
+.no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px 20px;
+    opacity: 0.5;
+    font-style: italic;
+    font-size: 0.9rem;
 }
-
-/* Modals */
-.modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
-    display: none; justify-content: center; align-items: center; z-index: 1000;
-}
-
-.modal-content {
-    width: 90%; max-width: 400px; max-height: 75vh;
-    background: #12161d; border: 1px solid var(--neon-cyan);
-    border-radius: 20px; padding: 20px; overflow-y: auto;
-}
-
-.popup-grid { grid-template-columns: 1fr 0.5fr; gap: 10px; }
 
 /* Specific Cell Styling */
 .student-name-cell { font-weight: 600; color: white; }
-.grade-cell { color: rgba(255, 255, 255, 0.6); }
-.time-cell { color: var(--neon-cyan); font-family: monospace; font-weight: bold; }
+.grade-cell { color: rgba(255, 255, 255, 0.6); text-align: center; }
+.time-cell { color: var(--neon-cyan); font-family: monospace; font-weight: bold; text-align: right; }
 
-/* CSV Export Button */
-#exportCSV {
-    color: var(--neon-green) !important;
-}
+/* CSV & Trash UI */
+#exportCSV { color: var(--neon-green) !important; }
+#trashBinBtn { color: var(--neon-red) !important; }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar { width: 4px; }
