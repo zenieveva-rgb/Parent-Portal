@@ -219,3 +219,20 @@ body, html {
 #toggleDeleteMode {
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+#exportCSV {
+    background: transparent;
+    border: none;
+    font-size: 1.4rem;
+    filter: drop-shadow(0 0 5px rgba(0, 255, 136, 0.2));
+}
+
+#exportCSV:hover {
+    color: #00ff88 !important;
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 10px #00ff88);
+}
+
+.nav-group {
+    display: flex;
+    align-items: center;
+}
