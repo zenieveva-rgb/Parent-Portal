@@ -21,7 +21,6 @@ let fullDataBuffer = {};
 
 // --- FIXED NAVIGATION LOGIC ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Navigation Buttons
     const historyBtn = document.getElementById('navToHistory');
     const trashBtn = document.getElementById('trashBinBtn');
     const backBtn = document.getElementById('navToPortal');
@@ -30,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (trashBtn) trashBtn.onclick = () => window.location.href = 'junk.html';
     if (backBtn) backBtn.onclick = () => window.location.href = 'index.html';
 
-    // Search Logic
     const searchBox = document.getElementById('searchBox');
     const searchTrigger = document.querySelector('.search-trigger');
     const nameInput = document.getElementById('nameInput');
@@ -44,10 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Real-time filtering
 document.getElementById('nameInput')?.addEventListener('input', (e) => processData(e.target.value.toLowerCase()));
 
-// --- ERASER / DELETE LOGIC ---
 const eraserBtn = document.getElementById('toggleDeleteMode');
 eraserBtn?.addEventListener('click', async () => {
     if (isSelectionMode && selectedAlbums.size > 0) {
@@ -112,23 +108,10 @@ function processData(searchTerm = "") {
             Object.keys(albums).filter(n => n.toLowerCase().includes(searchTerm)).forEach(name => {
                 const studentLogs = albums[name].logs;
                 const lastScan = studentLogs[studentLogs.length - 1].time || studentLogs[studentLogs.length - 1].scannedAt || '--:--';
-                
                 const wrapper = document.createElement('div');
                 wrapper.className = 'album-row-wrapper';
                 const checkboxHTML = isSelectionMode ? `<input type="checkbox" class="album-checkbox" onchange="toggleSelect('${name}')" ${selectedAlbums.has(name) ? 'checked' : ''}>` : '';
-                
-                wrapper.innerHTML = `
-                    ${checkboxHTML}
-                    <div class="student-album">
-                        <div class="album-icon"><i class="fa-solid fa-folder-open"></i></div>
-                        <div class="album-info-meta">
-                            <div class="album-name">${name}</div>
-                            <div class="album-sub">Grade: ${albums[name].grade || 'N/A'} • Last seen: ${lastScan}</div>
-                        </div>
-                        <div class="total-scans">${studentLogs.length} Logs</div>
-                    </div>
-                `;
-                
+                wrapper.innerHTML = `${checkboxHTML}<div class="student-album"><div class="album-icon"><i class="fa-solid fa-folder-open"></i></div><div class="album-info-meta"><div class="album-name">${name}</div><div class="album-sub">Grade: ${albums[name].grade || 'N/A'} • Last seen: ${lastScan}</div></div><div class="total-scans">${studentLogs.length} Logs</div></div>`;
                 wrapper.querySelector('.student-album').onclick = () => { if (!isSelectionMode) showPopUp(name, studentLogs); };
                 historyTable.appendChild(wrapper);
             });
