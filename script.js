@@ -21,7 +21,7 @@ let isSelectionMode = false;
 let selectedAlbums = new Set();
 let fullDataBuffer = {}; 
 
-// --- 3. NAVIGATION ---
+// --- 3. NAVIGATION & SEARCH UI ---
 function smoothNavigate(url) {
     const panel = document.getElementById('mainPanel');
     if (panel) {
@@ -35,25 +35,22 @@ document.getElementById('navToHistory')?.addEventListener('click', () => smoothN
 document.getElementById('trashBinBtn')?.addEventListener('click', () => smoothNavigate('junk.html'));
 document.getElementById('navToPortal')?.addEventListener('click', () => smoothNavigate('index.html'));
 
-document.getElementById('nameInput')?.addEventListener('input', (e) => {
-    processData(e.target.value.toLowerCase());
-});
-// --- SEARCH BOX LOGIC ---
-const searchBtn = document.querySelector('.search-box .fa-search');
-const searchBox = document.querySelector('.search-box');
+// Search Bar Expand/Collapse
+const searchBox = document.getElementById('searchBox');
+const searchTrigger = document.querySelector('.search-trigger') || document.getElementById('searchBtn');
 
-// This makes the search bar expand when you click the icon
-searchBtn?.addEventListener('click', () => {
+searchTrigger?.addEventListener('click', () => {
     searchBox.classList.toggle('active');
     if (searchBox.classList.contains('active')) {
         document.getElementById('nameInput').focus();
     }
 });
 
-// This triggers the filtering as you type
+// Real-time filtering logic
 document.getElementById('nameInput')?.addEventListener('input', (e) => {
     processData(e.target.value.toLowerCase());
 });
+
 // --- 4. ERASER FUNCTION ---
 const eraserBtn = document.getElementById('toggleDeleteMode');
 
@@ -97,8 +94,8 @@ eraserBtn?.addEventListener('click', async () => {
 // --- 5. RENDER LOGIC: PORTAL (ROWS) vs HISTORY (ALBUMS) ---
 function processData(searchTerm = "") {
     const attRef = ref(db, 'attendance');
-    const portalTable = document.getElementById('attendanceTable'); // Ensure index.html has this ID
-    const historyTable = document.getElementById('historyTable');   // Ensure history.html has this ID
+    const portalTable = document.getElementById('attendanceTable'); 
+    const historyTable = document.getElementById('historyTable');   
     
     onValue(attRef, (snapshot) => {
         const data = snapshot.val();
@@ -111,7 +108,7 @@ function processData(searchTerm = "") {
 
             Object.entries(data)
                 .filter(([k, v]) => v.studentName?.toLowerCase().includes(searchTerm))
-                .reverse() // Shows newest scans first
+                .reverse() 
                 .forEach(([key, val]) => {
                     const row = document.createElement('div');
                     row.className = 'attendance-row';
@@ -166,6 +163,7 @@ function processData(searchTerm = "") {
         }
     });
 }
+
 // --- 6. POPUP & MODALS ---
 window.toggleSelect = (name) => {
     if (selectedAlbums.has(name)) selectedAlbums.delete(name);
@@ -173,6 +171,9 @@ window.toggleSelect = (name) => {
 };
 
 window.showPopUp = (name, logs) => {
+    const modal = document.getElementById('historyModal');
+    if(!modal) return;
+
     document.getElementById('modalStudentName').innerText = name;
     const list = document.getElementById('individualLogs');
     list.innerHTML = '';
@@ -183,7 +184,7 @@ window.showPopUp = (name, logs) => {
             <button onclick="deleteLogEntry('${log.key}')" style="background:none; border:none; color:white; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>`;
         list.appendChild(item);
     });
-    document.getElementById('historyModal').style.display = 'flex';
+    modal.style.display = 'flex';
 };
 
 window.deleteLogEntry = (key) => {
@@ -212,4 +213,5 @@ document.getElementById('exportCSV')?.addEventListener('click', () => {
     document.body.removeChild(link);
 });
 
+// Initialize first run
 processData();
