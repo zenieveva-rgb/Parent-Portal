@@ -79,41 +79,44 @@ eraserBtn?.addEventListener('click', async () => {
     }
 });
 
-// --- 5. RENDER LOGIC: PORTAL vs HISTORY ---
+// --- 5. RENDER LOGIC: PORTAL (ROWS) vs HISTORY (ALBUMS) ---
 function processData(searchTerm = "") {
     const attRef = ref(db, 'attendance');
-    const portalTable = document.getElementById('attendanceTable'); 
-    const historyTable = document.getElementById('historyTable');   
+    const portalTable = document.getElementById('attendanceTable'); // Ensure index.html has this ID
+    const historyTable = document.getElementById('historyTable');   // Ensure history.html has this ID
     
     onValue(attRef, (snapshot) => {
         const data = snapshot.val();
         fullDataBuffer = data || {}; 
         
-        // VIEW: PARENT PORTAL (List only)
+        // --- VIEW A: PARENT PORTAL (List Only - No Albums) ---
         if (portalTable) {
             portalTable.innerHTML = '';
             if (!data) return;
+
             Object.entries(data)
                 .filter(([k, v]) => v.studentName?.toLowerCase().includes(searchTerm))
-                .reverse()
+                .reverse() // Shows newest scans first
                 .forEach(([key, val]) => {
                     const row = document.createElement('div');
                     row.className = 'attendance-row';
                     row.innerHTML = `
                         <span class="student-name-cell">${val.studentName}</span>
                         <span class="text-center grade-cell">${val.grade || 'N/A'}</span>
-                        <span class="text-right time-cell">${val.time || val.scannedAt || '--:--'}</span>`;
+                        <span class="text-right time-cell">${val.time || val.scannedAt || '--:--'}</span>
+                    `;
                     portalTable.appendChild(row);
                 });
         }
 
-        // VIEW: HISTORY (Albums/Folders)
+        // --- VIEW B: SCAN ARCHIVE (Albums/Folders Only) ---
         if (historyTable) {
             historyTable.innerHTML = '';
             if (!data) {
                 historyTable.innerHTML = '<p style="grid-column: 1/-1; text-align:center; opacity:0.5;">Empty History</p>';
                 return;
             }
+
             const albums = {};
             Object.entries(data).forEach(([key, val]) => {
                 const sName = val.studentName || "Unknown";
@@ -126,7 +129,10 @@ function processData(searchTerm = "") {
                 .forEach(name => {
                     const wrapper = document.createElement('div');
                     wrapper.className = 'album-row-wrapper';
-                    const checkboxHTML = isSelectionMode ? `<input type="checkbox" class="album-checkbox" onchange="toggleSelect('${name}')" ${selectedAlbums.has(name) ? 'checked' : ''}>` : '';
+                    
+                    const checkboxHTML = isSelectionMode ? 
+                        `<input type="checkbox" class="album-checkbox" onchange="toggleSelect('${name}')" ${selectedAlbums.has(name) ? 'checked' : ''}>` : '';
+
                     wrapper.innerHTML = `
                         ${checkboxHTML}
                         <div class="student-album">
@@ -134,14 +140,17 @@ function processData(searchTerm = "") {
                             <div class="album-name">${name}</div>
                             <div class="album-sub">${albums[name].grade || 'N/A'}</div>
                             <div class="total-scans">${albums[name].logs.length} Scans</div>
-                        </div>`;
-                    wrapper.querySelector('.student-album').onclick = () => { if (!isSelectionMode) showPopUp(name, albums[name].logs); };
+                        </div>
+                    `;
+                    
+                    wrapper.querySelector('.student-album').onclick = () => {
+                        if (!isSelectionMode) showPopUp(name, albums[name].logs);
+                    };
                     historyTable.appendChild(wrapper);
                 });
         }
     });
 }
-
 // --- 6. POPUP & MODALS ---
 window.toggleSelect = (name) => {
     if (selectedAlbums.has(name)) selectedAlbums.delete(name);
