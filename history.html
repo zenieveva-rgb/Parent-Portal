@@ -3,65 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parent Portal | Scan History</title>
+    <title>Parent Portal | Archive</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <body>
-    <div class="animated-bg"></div> ... rest of your code ...
-</body>
-    <div class="animated-bg history-theme"></div>
+    <div class="animated-bg"></div>
+
     <div class="page-background">
-        <div class="main-container" id="mainPanel">
-            
+        <div class="main-container">
             <div class="glass-header">
                 <h1 class="portal-title gold-text">SCAN ARCHIVE</h1>
-                <div class="status-indicator gold-border">
-                    <i class="fa-solid fa-database"></i> 12H ARCHIVE
-                </div>
+                <div class="status-indicator gold-border">ARCHIVE MODE</div>
             </div>
 
             <div class="top-controls-container">
                 <div class="nav-group">
-                    <button id="navToPortal" class="action-btn gold-btn">
-                        <i class="fa-solid fa-arrow-left"></i>
-                    </button>
-                    <button id="exportCSV" class="action-btn" title="Download Excel/CSV">
-                        <i class="fa-solid fa-file-csv"></i>
-                    </button>
+                    <button id="navToPortal" class="action-btn"><i class="fa-solid fa-arrow-left"></i></button>
                 </div>
-                
                 <div class="admin-group">
-                    <i class="fa-solid fa-trash-can" id="trashBinBtn" title="Junk Files"></i>
-                    <i class="fa-solid fa-eraser" id="toggleDeleteMode" title="Enable Delete"></i>
+                    <i class="fa-solid fa-eraser action-btn" id="toggleDeleteMode"></i>
                 </div>
             </div>
 
-            <div class="table-container">
-                <div class="table-header history-grid">
-                    <span>STUDENT</span>
-                    <span>GRADE</span>
-                    <span>TOTAL SCANS</span>
-                </div>
-                <div class="attendance-list" id="historyTable"></div>
-            </div>
+            <div class="attendance-list" id="historyTable"></div>
         </div>
     </div>
 
     <div id="historyModal" class="modal-overlay">
-        <div class="modal-content glass-card">
-            <div class="modal-header">
-                <h2 id="modalStudentName">STUDENT NAME</h2>
-                <button id="closeModal" class="close-btn">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="table-header popup-grid">
-                    <span>DATE</span>
-                    <span>TIME</span>
-                </div>
-                <div id="individualLogs" class="popup-list"></div>
-            </div>
+        <div class="modal-content">
+            <h2 id="modalStudentName" style="color:var(--neon-gold)">NAME</h2>
+            <div id="individualLogs" class="attendance-list" style="max-height: 300px;"></div>
+            <button id="closeModal" class="action-btn" style="width:100%; margin-top:15px; color:var(--neon-red)">CLOSE</button>
         </div>
     </div>
 
