@@ -22,18 +22,10 @@ onValue(ref(db, 'trash'), (snapshot) => {
         junkTable.innerHTML = '<p style="text-align:center; padding:20px; opacity:0.5;">Trash is empty.</p>';
         return;
     }
-
     Object.entries(data).forEach(([key, item]) => {
         const row = document.createElement('div');
         row.className = 'attendance-row history-grid';
-        row.innerHTML = `
-            <span>${item.studentName}</span>
-            <span>${item.deletedAt}</span>
-            <div class="log-actions" style="display:flex; gap:10px;">
-                <button onclick="restoreItem('${key}')" class="action-btn" style="color:#00ff88; background:none; border:none; cursor:pointer;"><i class="fa-solid fa-rotate-left"></i></button>
-                <button onclick="permDelete('${key}')" class="action-btn" style="color:#ff4d4d; background:none; border:none; cursor:pointer;"><i class="fa-solid fa-circle-xmark"></i></button>
-            </div>
-        `;
+        row.innerHTML = `<span>${item.studentName}</span><span>${item.deletedAt}</span><div class="log-actions" style="display:flex; gap:10px;"><button onclick="restoreItem('${key}')" class="action-btn" style="color:#00ff88; background:none; border:none; cursor:pointer;"><i class="fa-solid fa-rotate-left"></i></button><button onclick="permDelete('${key}')" class="action-btn" style="color:#ff4d4d; background:none; border:none; cursor:pointer;"><i class="fa-solid fa-circle-xmark"></i></button></div>`;
         junkTable.appendChild(row);
     });
 });
@@ -42,7 +34,6 @@ window.restoreItem = (trashKey) => {
     onValue(ref(db, `trash/${trashKey}`), async (snapshot) => {
         const entry = snapshot.val();
         if (!entry) return;
-
         const updates = {};
         entry.logs.forEach(log => {
             const originalKey = log.originalKey;
@@ -50,17 +41,11 @@ window.restoreItem = (trashKey) => {
             delete logData.originalKey; 
             updates[`attendance/${originalKey}`] = logData;
         });
-
         updates[`trash/${trashKey}`] = null;
         await update(ref(db), updates);
         alert("Student data restored!");
     }, { onlyOnce: true });
 };
 
-window.permDelete = (key) => {
-    if (confirm("Delete forever?")) remove(ref(db, `trash/${key}`));
-};
-
-document.getElementById('emptyTrashBtn')?.addEventListener('click', () => {
-    if (confirm("Clear entire trash bin?")) remove(ref(db, 'trash'));
-});
+window.permDelete = (key) => { if (confirm("Delete forever?")) remove(ref(db, `trash/${key}`)); };
+document.getElementById('emptyTrashBtn')?.addEventListener('click', () => { if (confirm("Clear entire trash bin?")) remove(ref(db, 'trash')); });
