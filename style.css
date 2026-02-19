@@ -1,4 +1,4 @@
-/* --- 1. CORE RESET --- */
+/* --- style.css --- */
 :root {
     --neon-cyan: #00E5FF;
     --neon-gold: #ffd700;
@@ -10,25 +10,25 @@ body, html {
     margin: 0; padding: 0;
     width: 100%; height: 100%;
     font-family: 'Segoe UI', sans-serif;
-    background-color: #0b0e14; /* Fallback color */
+    background-color: #0b0e14 !important; /* Base color */
     color: white;
-    overflow-x: hidden;
 }
 
-/* --- 2. THE BACKGROUND (IMAGE FIX) --- */
+/* THE BACKGROUND - Fixed path for root directory */
 .animated-bg {
     position: fixed;
     top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    /* Ensure bg.png is in the same folder as this CSS file */
+    width: 100vw; 
+    height: 100vh;
+    /* This points directly to the bg.png in your screenshot */
     background: linear-gradient(rgba(11, 14, 20, 0.7), rgba(11, 14, 20, 0.7)), 
-                url('bg.png') no-repeat center center fixed;
-    background-size: cover;
-    z-index: -1; 
+                url('./bg.png') no-repeat center center fixed !important;
+    background-size: cover !important;
+    z-index: -1;
     display: block !important;
 }
 
-/* --- 3. PAGE ANIMATIONS --- */
+/* PAGE ANIMATION */
 .main-container {
     animation: slideUpFade 0.8s ease-out forwards;
 }
@@ -38,9 +38,9 @@ body, html {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Icon Pop Animation */
+/* ICON POP ANIMATION */
 .icon-pop {
-    animation: bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
 }
 
 @keyframes bounce {
@@ -49,10 +49,11 @@ body, html {
     100% { transform: scale(1); }
 }
 
-/* --- 4. GLASS UI --- */
 .page-background {
     background: transparent !important;
-    display: flex; justify-content: center; align-items: center;
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
     min-height: 100vh;
 }
 
@@ -63,5 +64,6 @@ body, html {
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     padding: 20px;
-    width: 90%; max-width: 400px;
+    width: 90%; 
+    max-width: 400px;
 }
