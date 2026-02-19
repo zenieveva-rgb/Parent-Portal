@@ -13,17 +13,19 @@
     <div class="page-background">
         <div class="main-container">
             <div class="glass-header">
-                <h1 class="portal-title gold-text">TRASH BIN</h1>
+                <h1 class="portal-title" style="color:var(--neon-red)">TRASH BIN</h1>
             </div>
 
             <div class="top-controls-container">
-                <button onclick="window.location.href='index.html'" class="action-btn">BACK</button>
+                <button id="navToPortal" class="action-btn">BACK</button>
                 <button id="emptyTrashBtn" style="color:var(--neon-red); background:none; border:none; cursor:pointer;">EMPTY ALL</button>
             </div>
 
             <div class="attendance-list" id="junkTable"></div>
         </div>
     </div>
+    
     <script type="module" src="junk-logic.js"></script>
+    <script type="module" src="script.js"></script> 
 </body>
 </html>
