@@ -3,46 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Parent Portal | Digital Hub</title>
+    <title>Parent Portal | Mobile</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
-
     <div class="animated-bg"></div>
-
     <div class="page-background">
-        <div class="main-container">
+        <div class="main-container" id="mainPanel">
             
             <div class="glass-header">
                 <h1 class="portal-title">LIVE MONITOR</h1>
-                <div class="status-label">ACTIVE</div>
-            </div>
-
-            <div class="top-controls">
-                <div class="icon-group">
-                    <i class="fa-solid fa-clock-rotate-left action-btn" id="navToHistory"></i>
-                    <i class="fa-solid fa-trash-can action-btn" id="trashBinBtn" style="color: #ff4d4d; margin-left: 20px;"></i>
-                </div>
-                
-                <div class="search-box" id="searchBox">
-                    <input type="text" id="nameInput" placeholder="SEARCH..." class="search-input">
-                    <i class="fa-solid fa-magnifying-glass search-trigger"></i>
+                <div class="status-indicator">
+                    <span class="dot"></span> ACTIVE
                 </div>
             </div>
 
-            <div class="table-container">
-                <div class="table-header">
-                    <span>NAME</span>
-                    <span style="text-align: center;">GRADE</span>
-                    <span style="text-align: right;">TIME</span>
-                </div>
-                <div id="attendanceTable" class="attendance-list"></div>
-            </div>
-            
-        </div>
+<div class="top-controls">
+    <div class="control-group">
+        <i class="fa-solid fa-clock-rotate-left action-btn" id="navToHistory"></i>
+        
+        <i class="fa-solid fa-trash-can action-btn" id="trashBinBtn" style="color: #ff4d4d; margin-left: 15px;"></i>
     </div>
-    <script type="module" src="script.js"></script>
+
+    <div class="search-box" id="searchBox">
+        <input type="text" id="nameInput" placeholder="Search..." class="search-input">
+        <i class="fa-solid fa-magnifying-glass search-trigger"></i>
+    </div>
+</div>
+<div class="table-container">
+    <div class="table-header">
+        <span>NAME</span>
+        <span class="text-center">GRADE</span>
+        <span class="text-right">TIME</span>
+    </div>
+    <div class="attendance-list" id="attendanceTable"></div>
+</div>
+            <script type="module" src="script.js"></script>
 </body>
 </html>
