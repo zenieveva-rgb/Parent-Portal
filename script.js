@@ -1,6 +1,46 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
 import { getDatabase, ref, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
+// Helper to animate icons on click
+function animateIcon(element) {
+    element.classList.add('icon-pop');
+    setTimeout(() => {
+        element.classList.remove('icon-pop');
+    }, 300);
+}
 
+// Update your Navigation listeners to include the animation
+document.addEventListener('DOMContentLoaded', () => {
+    const historyBtn = document.getElementById('navToHistory');
+    const trashBtn = document.getElementById('trashBinBtn');
+    const backBtn = document.getElementById('navToPortal');
+
+    if (historyBtn) {
+        historyBtn.onclick = (e) => {
+            animateIcon(e.target);
+            setTimeout(() => window.location.href = 'history.html', 200);
+        };
+    }
+
+    if (trashBtn) {
+        trashBtn.onclick = (e) => {
+            animateIcon(e.target);
+            setTimeout(() => window.location.href = 'junk.html', 200);
+        };
+    }
+
+    if (backBtn) {
+        backBtn.onclick = (e) => {
+            animateIcon(e.target);
+            setTimeout(() => window.location.href = 'index.html', 200);
+        };
+    }
+    
+    // Animate Search Icon
+    const searchTrigger = document.querySelector('.search-trigger');
+    if (searchTrigger) {
+        searchTrigger.addEventListener('click', (e) => animateIcon(e.target));
+    }
+});
 const firebaseConfig = {
     apiKey: "AIzaSyBdlEvDlQ1qWr8xdL4bV25NW4RgcTajYqM",
     authDomain: "database-98a70.firebaseapp.com",
