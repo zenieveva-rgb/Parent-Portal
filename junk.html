@@ -3,37 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Junk Recovery | Admin</title>
+    <title>Junk Recovery</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <body>
-    <div class="animated-bg"></div> ... rest of your code ...
-</body>
-    <div class="animated-bg history-theme"></div>
+    <div class="animated-bg"></div>
+
     <div class="page-background">
-        <div class="main-container fade-in" id="junkPanel">
+        <div class="main-container">
             <div class="glass-header">
-                <h1 class="portal-title gold-text">JUNK RECOVERY</h1>
-                <div class="status-indicator red-border"><i class="fa-solid fa-box-archive"></i> TRASH BIN</div>
+                <h1 class="portal-title gold-text">TRASH BIN</h1>
             </div>
 
             <div class="top-controls-container">
-                <button onclick="window.location.href='history.html'" class="action-btn gold-btn">
-                    <i class="fa-solid fa-arrow-left"></i> BACK
-                </button>
-                <button id="emptyTrashBtn" class="delete-btn-action">EMPTY TRASH</button>
+                <button onclick="window.location.href='index.html'" class="action-btn">BACK</button>
+                <button id="emptyTrashBtn" style="color:var(--neon-red); background:none; border:none; cursor:pointer;">EMPTY ALL</button>
             </div>
 
-            <div class="table-container">
-                <div class="table-header history-grid">
-                    <span>STUDENT</span>
-                    <span>DELETED DATE</span>
-                    <span>ACTIONS</span>
-                </div>
-                <div class="attendance-list" id="junkTable"></div>
-            </div>
+            <div class="attendance-list" id="junkTable"></div>
         </div>
     </div>
     <script type="module" src="junk-logic.js"></script>
