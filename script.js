@@ -38,7 +38,22 @@ document.getElementById('navToPortal')?.addEventListener('click', () => smoothNa
 document.getElementById('nameInput')?.addEventListener('input', (e) => {
     processData(e.target.value.toLowerCase());
 });
+// --- SEARCH BOX LOGIC ---
+const searchBtn = document.querySelector('.search-box .fa-search');
+const searchBox = document.querySelector('.search-box');
 
+// This makes the search bar expand when you click the icon
+searchBtn?.addEventListener('click', () => {
+    searchBox.classList.toggle('active');
+    if (searchBox.classList.contains('active')) {
+        document.getElementById('nameInput').focus();
+    }
+});
+
+// This triggers the filtering as you type
+document.getElementById('nameInput')?.addEventListener('input', (e) => {
+    processData(e.target.value.toLowerCase());
+});
 // --- 4. ERASER FUNCTION ---
 const eraserBtn = document.getElementById('toggleDeleteMode');
 
