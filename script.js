@@ -87,11 +87,18 @@ function processData(searchTerm = "") {
         
         if (portalTable) {
             portalTable.innerHTML = '';
-            Object.entries(fullDataBuffer).filter(([k, v]) => v.studentName?.toLowerCase().includes(searchTerm))
-                .reverse().forEach(([key, val]) => {
+            Object.entries(fullDataBuffer)
+                .filter(([k, v]) => (v.studentName || "").toLowerCase().includes(searchTerm))
+                .reverse()
+                .forEach(([key, val]) => {
                     const row = document.createElement('div');
                     row.className = 'attendance-row';
-                    row.innerHTML = `<span>${val.studentName}</span><span class="text-center">${val.grade || 'N/A'}</span><span class="text-right">${val.time || val.scannedAt || '--:--'}</span>`;
+                    // FIX: We ensure studentName and grade are displayed in their specific columns
+                    row.innerHTML = `
+                        <span>${val.studentName || 'Unknown Name'}</span>
+                        <span class="text-center">${val.grade || 'N/A'}</span>
+                        <span class="text-right">${val.time || val.scannedAt || '--:--'}</span>
+                    `;
                     portalTable.appendChild(row);
                 });
         }
@@ -99,22 +106,48 @@ function processData(searchTerm = "") {
         if (historyTable) {
             historyTable.innerHTML = '';
             const albums = {};
+            
             Object.entries(fullDataBuffer).forEach(([key, val]) => {
-                const sName = val.studentName || "Unknown";
-                if (!albums[sName]) albums[sName] = { grade: val.grade, logs: [] };
+                // FIX: Ensure we group by the Student Name, not the section
+                const sName = val.studentName || "Unknown Student";
+                if (!albums[sName]) {
+                    albums[sName] = { 
+                        grade: val.grade || 'N/A', 
+                        logs: [] 
+                    };
+                }
                 albums[sName].logs.push({ key, ...val });
             });
 
-            Object.keys(albums).filter(n => n.toLowerCase().includes(searchTerm)).forEach(name => {
-                const studentLogs = albums[name].logs;
-                const lastScan = studentLogs[studentLogs.length - 1].time || studentLogs[studentLogs.length - 1].scannedAt || '--:--';
-                const wrapper = document.createElement('div');
-                wrapper.className = 'album-row-wrapper';
-                const checkboxHTML = isSelectionMode ? `<input type="checkbox" class="album-checkbox" onchange="toggleSelect('${name}')" ${selectedAlbums.has(name) ? 'checked' : ''}>` : '';
-                wrapper.innerHTML = `${checkboxHTML}<div class="student-album"><div class="album-icon"><i class="fa-solid fa-folder-open"></i></div><div class="album-info-meta"><div class="album-name">${name}</div><div class="album-sub">Grade: ${albums[name].grade || 'N/A'} • Last seen: ${lastScan}</div></div><div class="total-scans">${studentLogs.length} Logs</div></div>`;
-                wrapper.querySelector('.student-album').onclick = () => { if (!isSelectionMode) showPopUp(name, studentLogs); };
-                historyTable.appendChild(wrapper);
-            });
+            Object.keys(albums)
+                .filter(n => n.toLowerCase().includes(searchTerm))
+                .forEach(name => {
+                    const studentLogs = albums[name].logs;
+                    const lastScan = studentLogs[studentLogs.length - 1].time || studentLogs[studentLogs.length - 1].scannedAt || '--:--';
+                    
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'album-row-wrapper';
+                    
+                    const checkboxHTML = isSelectionMode ? 
+                        `<input type="checkbox" class="album-checkbox" onchange="toggleSelect('${name}')" ${selectedAlbums.has(name) ? 'checked' : ''}>` : '';
+                    
+                    // FIX: Display name in large text and grade in the sub-text
+                    wrapper.innerHTML = `
+                        ${checkboxHTML}
+                        <div class="student-album">
+                            <div class="album-icon"><i class="fa-solid fa-folder-open"></i></div>
+                            <div class="album-info-meta">
+                                <div class="album-name">${name}</div>
+                                <div class="album-sub">Grade: ${albums[name].grade} • Last seen: ${lastScan}</div>
+                            </div>
+                            <div class="total-scans">${studentLogs.length} Logs</div>
+                        </div>`;
+                        
+                    wrapper.querySelector('.student-album').onclick = () => { 
+                        if (!isSelectionMode) showPopUp(name, studentLogs); 
+                    };
+                    historyTable.appendChild(wrapper);
+                });
         }
     });
 }
