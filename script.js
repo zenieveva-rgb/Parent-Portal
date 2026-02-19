@@ -1,46 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-import { getDatabase, ref, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
-// Helper to animate icons on click
-function animateIcon(element) {
-    element.classList.add('icon-pop');
-    setTimeout(() => {
-        element.classList.remove('icon-pop');
-    }, 300);
-}
+import { getDatabase, ref, onValue, remove, update } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
 
-// Update your Navigation listeners to include the animation
-document.addEventListener('DOMContentLoaded', () => {
-    const historyBtn = document.getElementById('navToHistory');
-    const trashBtn = document.getElementById('trashBinBtn');
-    const backBtn = document.getElementById('navToPortal');
-
-    if (historyBtn) {
-        historyBtn.onclick = (e) => {
-            animateIcon(e.target);
-            setTimeout(() => window.location.href = 'history.html', 200);
-        };
-    }
-
-    if (trashBtn) {
-        trashBtn.onclick = (e) => {
-            animateIcon(e.target);
-            setTimeout(() => window.location.href = 'junk.html', 200);
-        };
-    }
-
-    if (backBtn) {
-        backBtn.onclick = (e) => {
-            animateIcon(e.target);
-            setTimeout(() => window.location.href = 'index.html', 200);
-        };
-    }
-    
-    // Animate Search Icon
-    const searchTrigger = document.querySelector('.search-trigger');
-    if (searchTrigger) {
-        searchTrigger.addEventListener('click', (e) => animateIcon(e.target));
-    }
-});
+// 1. FIREBASE CONFIG
 const firebaseConfig = {
     apiKey: "AIzaSyBdlEvDlQ1qWr8xdL4bV25NW4RgcTajYqM",
     authDomain: "database-98a70.firebaseapp.com",
@@ -54,38 +15,60 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+// 2. STATE & CONSTANTS
 const ADMIN_PASSWORD = "1234"; 
 let isSelectionMode = false;
 let selectedAlbums = new Set();
 let fullDataBuffer = {}; 
 
-// --- FIXED NAVIGATION LOGIC ---
+// 3. UI ANIMATION HELPERS
+function animateIcon(element) {
+    if (!element) return;
+    element.classList.add('icon-pop');
+    setTimeout(() => element.classList.remove('icon-pop'), 300);
+}
+
+// 4. CORE NAVIGATION & UI LOGIC
 document.addEventListener('DOMContentLoaded', () => {
     const historyBtn = document.getElementById('navToHistory');
     const trashBtn = document.getElementById('trashBinBtn');
     const backBtn = document.getElementById('navToPortal');
-
-    if (historyBtn) historyBtn.onclick = () => window.location.href = 'history.html';
-    if (trashBtn) trashBtn.onclick = () => window.location.href = 'junk.html';
-    if (backBtn) backBtn.onclick = () => window.location.href = 'index.html';
-
-    const searchBox = document.getElementById('searchBox');
     const searchTrigger = document.querySelector('.search-trigger');
+    const searchBox = document.getElementById('searchBox');
     const nameInput = document.getElementById('nameInput');
 
+    // Navigation with animation delay
+    if (historyBtn) historyBtn.onclick = (e) => {
+        animateIcon(e.currentTarget);
+        setTimeout(() => window.location.href = 'history.html', 250);
+    };
+    if (trashBtn) trashBtn.onclick = (e) => {
+        animateIcon(e.currentTarget);
+        setTimeout(() => window.location.href = 'junk.html', 250);
+    };
+    if (backBtn) backBtn.onclick = (e) => {
+        animateIcon(e.currentTarget);
+        setTimeout(() => window.location.href = 'index.html', 250);
+    };
+
+    // Search Toggle
     if (searchTrigger && searchBox) {
         searchTrigger.onclick = (e) => {
-            e.stopPropagation();
+            animateIcon(e.currentTarget);
             searchBox.classList.toggle('active');
             if (searchBox.classList.contains('active')) nameInput?.focus();
         };
     }
+
+    // Real-time search filter
+    nameInput?.addEventListener('input', (e) => processData(e.target.value.toLowerCase()));
 });
 
-document.getElementById('nameInput')?.addEventListener('input', (e) => processData(e.target.value.toLowerCase()));
-
+// 5. SELECTION & DELETE LOGIC
 const eraserBtn = document.getElementById('toggleDeleteMode');
-eraserBtn?.addEventListener('click', async () => {
+eraserBtn?.addEventListener('click', async (e) => {
+    animateIcon(e.currentTarget);
+    
     if (isSelectionMode && selectedAlbums.size > 0) {
         const pass = prompt(`Move ${selectedAlbums.size} items to Junk? Password:`);
         if (pass === ADMIN_PASSWORD) {
@@ -108,8 +91,10 @@ eraserBtn?.addEventListener('click', async () => {
                 selectedAlbums.clear();
                 isSelectionMode = false;
                 eraserBtn.classList.remove('active');
-            } catch (e) { alert("Error updating database."); }
-        } else if (pass !== null) alert("Wrong Password.");
+            } catch (err) { alert("Error updating database."); }
+        } else if (pass !== null) {
+            alert("Wrong Password.");
+        }
     } else {
         isSelectionMode = !isSelectionMode;
         if (!isSelectionMode) selectedAlbums.clear();
@@ -118,6 +103,7 @@ eraserBtn?.addEventListener('click', async () => {
     }
 });
 
+// 6. DATA PROCESSING & RENDERING
 function processData(searchTerm = "") {
     onValue(ref(db, 'attendance'), (snapshot) => {
         const data = snapshot.val();
@@ -125,6 +111,7 @@ function processData(searchTerm = "") {
         const portalTable = document.getElementById('attendanceTable'); 
         const historyTable = document.getElementById('historyTable');   
         
+        // Render Portal View (Live Monitor)
         if (portalTable) {
             portalTable.innerHTML = '';
             Object.entries(fullDataBuffer)
@@ -133,7 +120,6 @@ function processData(searchTerm = "") {
                 .forEach(([key, val]) => {
                     const row = document.createElement('div');
                     row.className = 'attendance-row';
-                    // FIX: We ensure studentName and grade are displayed in their specific columns
                     row.innerHTML = `
                         <span>${val.studentName || 'Unknown Name'}</span>
                         <span class="text-center">${val.grade || 'N/A'}</span>
@@ -143,18 +129,15 @@ function processData(searchTerm = "") {
                 });
         }
 
+        // Render Archive View (History)
         if (historyTable) {
             historyTable.innerHTML = '';
             const albums = {};
             
             Object.entries(fullDataBuffer).forEach(([key, val]) => {
-                // FIX: Ensure we group by the Student Name, not the section
                 const sName = val.studentName || "Unknown Student";
                 if (!albums[sName]) {
-                    albums[sName] = { 
-                        grade: val.grade || 'N/A', 
-                        logs: [] 
-                    };
+                    albums[sName] = { grade: val.grade || 'N/A', logs: [] };
                 }
                 albums[sName].logs.push({ key, ...val });
             });
@@ -164,14 +147,12 @@ function processData(searchTerm = "") {
                 .forEach(name => {
                     const studentLogs = albums[name].logs;
                     const lastScan = studentLogs[studentLogs.length - 1].time || studentLogs[studentLogs.length - 1].scannedAt || '--:--';
-                    
                     const wrapper = document.createElement('div');
                     wrapper.className = 'album-row-wrapper';
                     
                     const checkboxHTML = isSelectionMode ? 
-                        `<input type="checkbox" class="album-checkbox" onchange="toggleSelect('${name}')" ${selectedAlbums.has(name) ? 'checked' : ''}>` : '';
+                        `<input type="checkbox" class="album-checkbox" data-name="${name}" ${selectedAlbums.has(name) ? 'checked' : ''}>` : '';
                     
-                    // FIX: Display name in large text and grade in the sub-text
                     wrapper.innerHTML = `
                         ${checkboxHTML}
                         <div class="student-album">
@@ -182,7 +163,10 @@ function processData(searchTerm = "") {
                             </div>
                             <div class="total-scans">${studentLogs.length} Logs</div>
                         </div>`;
-                        
+                    
+                    // Handle Checkbox inside wrapper
+                    wrapper.querySelector('.album-checkbox')?.addEventListener('change', () => toggleSelect(name));
+
                     wrapper.querySelector('.student-album').onclick = () => { 
                         if (!isSelectionMode) showPopUp(name, studentLogs); 
                     };
@@ -192,6 +176,7 @@ function processData(searchTerm = "") {
     });
 }
 
+// 7. WINDOW FUNCTIONS (Global access for HTML buttons)
 window.toggleSelect = (name) => {
     if (selectedAlbums.has(name)) selectedAlbums.delete(name);
     else selectedAlbums.add(name);
@@ -206,13 +191,32 @@ window.showPopUp = (name, logs) => {
     logs.forEach(log => {
         const item = document.createElement('div');
         item.className = 'attendance-row popup-grid';
-        item.innerHTML = `<span>${log.scannedAt || log.time}</span><button onclick="deleteLogEntry('${log.key}')" style="background:none; border:none; color:white; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>`;
+        item.innerHTML = `
+            <span>${log.scannedAt || log.time}</span>
+            <button class="delete-log-btn" data-key="${log.key}" style="background:none; border:none; color:white; cursor:pointer;">
+                <i class="fa-solid fa-trash"></i>
+            </button>`;
+        
+        item.querySelector('.delete-log-btn').onclick = (e) => {
+            animateIcon(e.currentTarget);
+            deleteLogEntry(log.key);
+        };
         list.appendChild(item);
     });
     modal.style.display = 'flex';
 };
 
-window.deleteLogEntry = (key) => { if (prompt("Admin Password:") === ADMIN_PASSWORD) remove(ref(db, `attendance/${key}`)); };
-document.getElementById('closeModal')?.addEventListener('click', () => { document.getElementById('historyModal').style.display = 'none'; });
+window.deleteLogEntry = (key) => { 
+    if (prompt("Admin Password:") === ADMIN_PASSWORD) {
+        remove(ref(db, `attendance/${key}`)); 
+    } else {
+        alert("Incorrect Password.");
+    }
+};
 
+document.getElementById('closeModal')?.addEventListener('click', () => { 
+    document.getElementById('historyModal').style.display = 'none'; 
+});
+
+// Start the app
 processData();
