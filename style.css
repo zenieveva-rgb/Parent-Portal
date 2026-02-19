@@ -105,3 +105,13 @@ body, html {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 10px; }
+
+/* Ensure columns stay aligned even if names are long */
+.attendance-row span, .table-header span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.text-center { text-align: center; justify-content: center; }
+.text-right { text-align: right; justify-content: flex-end; }
