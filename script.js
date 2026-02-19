@@ -96,19 +96,18 @@ eraserBtn?.addEventListener('click', async () => {
 // --- 5. RENDER LOGIC: PORTAL (ROWS) vs HISTORY (ALBUMS) ---
 function processData(searchTerm = "") {
     const attRef = ref(db, 'attendance');
-    const portalTable = document.getElementById('attendanceTable'); // Only exists in index.html
-    const historyTable = document.getElementById('historyTable');   // Only exists in history.html
+    const portalTable = document.getElementById('attendanceTable'); // Used in index.html
+    const historyTable = document.getElementById('historyTable');   // Used in history.html
     
     onValue(attRef, (snapshot) => {
         const data = snapshot.val();
         fullDataBuffer = data || {}; 
         
-        // --- VIEW A: PARENT PORTAL (Live Monitor List) ---
+        // --- VIEW A: PARENT PORTAL (Live Monitor - List Only) ---
         if (portalTable) {
             portalTable.innerHTML = '';
             if (!data) return;
-            
-            // Convert to array and reverse to show the latest scan at the top
+
             Object.entries(data)
                 .filter(([k, v]) => v.studentName?.toLowerCase().includes(searchTerm))
                 .reverse() 
@@ -118,13 +117,13 @@ function processData(searchTerm = "") {
                     row.innerHTML = `
                         <span class="student-name-cell">${val.studentName}</span>
                         <span class="text-center grade-cell">${val.grade || 'N/A'}</span>
-                        <span class="text-right time-cell">${val.time || val.scannedAt}</span>
+                        <span class="text-right time-cell">${val.time || val.scannedAt || '--:--'}</span>
                     `;
                     portalTable.appendChild(row);
                 });
         }
 
-        // --- VIEW B: SCAN ARCHIVE (History Albums) ---
+        // --- VIEW B: SCAN ARCHIVE (History - Albums/Folders) ---
         if (historyTable) {
             historyTable.innerHTML = '';
             if (!data) {
@@ -145,7 +144,6 @@ function processData(searchTerm = "") {
                     const wrapper = document.createElement('div');
                     wrapper.className = 'album-row-wrapper';
                     
-                    // The Eraser/Delete Mode logic remains untouched here
                     const checkboxHTML = isSelectionMode ? 
                         `<input type="checkbox" class="album-checkbox" onchange="toggleSelect('${name}')" ${selectedAlbums.has(name) ? 'checked' : ''}>` : '';
 
@@ -167,7 +165,6 @@ function processData(searchTerm = "") {
         }
     });
 }
-
 window.toggleSelect = (studentName) => {
     if (selectedAlbums.has(studentName)) selectedAlbums.delete(studentName);
     else selectedAlbums.add(studentName);
