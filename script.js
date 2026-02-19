@@ -19,28 +19,35 @@ let isSelectionMode = false;
 let selectedAlbums = new Set();
 let fullDataBuffer = {}; 
 
-function smoothNavigate(url) {
-    const panel = document.getElementById('mainPanel');
-    if (panel) {
-        panel.style.opacity = "0";
-        panel.style.transform = "scale(0.9)";
+// --- FIXED NAVIGATION LOGIC ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Navigation Buttons
+    const historyBtn = document.getElementById('navToHistory');
+    const trashBtn = document.getElementById('trashBinBtn');
+    const backBtn = document.getElementById('navToPortal');
+
+    if (historyBtn) historyBtn.onclick = () => window.location.href = 'history.html';
+    if (trashBtn) trashBtn.onclick = () => window.location.href = 'junk.html';
+    if (backBtn) backBtn.onclick = () => window.location.href = 'index.html';
+
+    // Search Logic
+    const searchBox = document.getElementById('searchBox');
+    const searchTrigger = document.querySelector('.search-trigger');
+    const nameInput = document.getElementById('nameInput');
+
+    if (searchTrigger && searchBox) {
+        searchTrigger.onclick = (e) => {
+            e.stopPropagation();
+            searchBox.classList.toggle('active');
+            if (searchBox.classList.contains('active')) nameInput?.focus();
+        };
     }
-    setTimeout(() => { window.location.href = url; }, 500);
-}
-
-document.getElementById('navToHistory')?.addEventListener('click', () => smoothNavigate('history.html'));
-document.getElementById('trashBinBtn')?.addEventListener('click', () => smoothNavigate('junk.html'));
-document.getElementById('navToPortal')?.addEventListener('click', () => smoothNavigate('index.html'));
-
-const searchBox = document.getElementById('searchBox');
-const searchTrigger = document.querySelector('.search-trigger');
-searchTrigger?.addEventListener('click', () => {
-    searchBox.classList.toggle('active');
-    if (searchBox.classList.contains('active')) document.getElementById('nameInput').focus();
 });
 
+// Real-time filtering
 document.getElementById('nameInput')?.addEventListener('input', (e) => processData(e.target.value.toLowerCase()));
 
+// --- ERASER / DELETE LOGIC ---
 const eraserBtn = document.getElementById('toggleDeleteMode');
 eraserBtn?.addEventListener('click', async () => {
     if (isSelectionMode && selectedAlbums.size > 0) {
@@ -135,6 +142,8 @@ window.toggleSelect = (name) => {
 };
 
 window.showPopUp = (name, logs) => {
+    const modal = document.getElementById('historyModal');
+    if (!modal) return;
     document.getElementById('modalStudentName').innerText = name;
     const list = document.getElementById('individualLogs');
     list.innerHTML = '';
@@ -144,7 +153,7 @@ window.showPopUp = (name, logs) => {
         item.innerHTML = `<span>${log.scannedAt || log.time}</span><button onclick="deleteLogEntry('${log.key}')" style="background:none; border:none; color:white; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>`;
         list.appendChild(item);
     });
-    document.getElementById('historyModal').style.display = 'flex';
+    modal.style.display = 'flex';
 };
 
 window.deleteLogEntry = (key) => { if (prompt("Admin Password:") === ADMIN_PASSWORD) remove(ref(db, `attendance/${key}`)); };
