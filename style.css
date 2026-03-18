@@ -1056,3 +1056,500 @@ body, html {
         font-size: 0.85rem;
     }
 }
+/* ==================== ARCHIVE SPECIFIC STYLES ==================== */
+.archive-header {
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    background: linear-gradient(135deg, rgba(15, 20, 25, 0.8) 0%, rgba(40, 35, 20, 0.6) 100%);
+}
+
+.archive-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 6px 12px;
+    background: rgba(255, 215, 0, 0.15);
+    border: 1px solid var(--neon-gold);
+    border-radius: 20px;
+}
+
+.archive-icon {
+    color: var(--neon-gold);
+    font-size: 0.9rem;
+}
+
+.archive-text {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--neon-gold);
+    letter-spacing: 2px;
+}
+
+.folder-counter {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 5px;
+}
+
+/* ==================== MORPHING SEARCH ANIMATION ==================== */
+.search-morph-container {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.search-morph {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 45px;
+}
+
+.search-morph-input {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: 2px solid var(--glass-border);
+    background: var(--glass);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    padding: 0 45px 0 20px;
+    outline: none;
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.search-morph.active .search-morph-input {
+    width: 250px;
+    border-radius: 25px;
+    border-color: var(--neon-gold);
+    background: rgba(15, 20, 25, 0.95);
+    opacity: 1;
+    pointer-events: all;
+    padding-right: 50px;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+}
+
+.search-morph-btn {
+    position: absolute;
+    right: 0;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: 2px solid var(--glass-border);
+    background: var(--glass);
+    color: var(--neon-gold);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    z-index: 2;
+}
+
+.search-morph.active .search-morph-btn {
+    background: var(--neon-gold);
+    color: var(--bg-dark);
+    transform: rotate(90deg);
+    border-color: var(--neon-gold);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.search-morph-btn:hover {
+    transform: scale(1.1);
+    border-color: var(--neon-gold);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.search-morph.active .search-morph-btn:hover {
+    transform: rotate(90deg) scale(1.1);
+}
+
+/* Search Icon Morph Animation */
+.search-morph-btn i {
+    transition: transform 0.3s;
+}
+
+.search-morph.active .search-morph-btn i {
+    transform: rotate(-90deg);
+}
+
+/* ==================== ALPHABET SCROLLER ==================== */
+.alphabet-scroller {
+    margin-bottom: 15px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.alphabet-scroller::-webkit-scrollbar {
+    display: none;
+}
+
+.alphabet-track {
+    display: flex;
+    gap: 8px;
+    padding: 5px;
+}
+
+.alpha-pill {
+    min-width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 18px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 700;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.alpha-pill:hover {
+    background: rgba(255, 215, 0, 0.2);
+    border-color: var(--neon-gold);
+    color: var(--neon-gold);
+    transform: translateY(-2px);
+}
+
+.alpha-pill.active {
+    background: var(--neon-gold);
+    color: var(--bg-dark);
+    border-color: var(--neon-gold);
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+}
+
+/* ==================== FOLDER GRID STYLES ==================== */
+.folder-container {
+    border: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.folder-header {
+    background: rgba(255, 215, 0, 0.05);
+    border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+    color: var(--neon-gold);
+}
+
+.col-folder { text-align: left; }
+.col-info { text-align: center; }
+.col-action { text-align: right; }
+
+.folder-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+}
+
+/* Letter Divider */
+.letter-divider {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 15px 0 10px 0;
+    padding: 0 10px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--neon-gold);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+}
+
+.letter-divider::before,
+.letter-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--neon-gold), transparent);
+}
+
+.letter-divider:first-child {
+    margin-top: 5px;
+}
+
+/* Folder Card - Enhanced */
+.folder-card {
+    display: grid;
+    grid-template-columns: 2fr 1fr auto;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(-30px);
+    animation: slideInRight 0.5s forwards;
+}
+
+@keyframes slideInRight {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.folder-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--neon-gold), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.folder-card:hover {
+    background: rgba(255, 215, 0, 0.05);
+    border-color: rgba(255, 215, 0, 0.3);
+    transform: translateX(10px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 215, 0, 0.1);
+}
+
+.folder-card:hover::before {
+    opacity: 1;
+}
+
+/* Folder Icon Section */
+.folder-icon-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.folder-icon-wrap {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.05));
+    border-radius: 12px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.folder-icon-wrap i {
+    font-size: 1.5rem;
+    color: var(--neon-gold);
+    transition: transform 0.3s;
+}
+
+.folder-card:hover .folder-icon-wrap i {
+    transform: scale(1.1) rotate(-5deg);
+}
+
+.folder-count-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 22px;
+    height: 22px;
+    background: var(--neon-red);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 800;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--bg-dark);
+    box-shadow: 0 2px 8px rgba(255, 77, 77, 0.5);
+}
+
+.folder-info-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.folder-name-text {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.folder-meta {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.folder-meta i {
+    color: var(--neon-gold);
+    font-size: 0.7rem;
+}
+
+/* Grade & Scans Column */
+.folder-stats {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.grade-pill {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: var(--neon-gold);
+    font-weight: 600;
+}
+
+.scans-text {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+/* View Button */
+.folder-view-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.folder-view-btn:hover {
+    background: var(--neon-gold);
+    color: var(--bg-dark);
+    transform: scale(1.1) translateX(3px);
+}
+
+/* ==================== MODAL ENHANCEMENTS ==================== */
+.gold-avatar {
+    background: linear-gradient(135deg, var(--neon-gold), #ff8c00) !important;
+    color: var(--bg-dark);
+}
+
+.gold-btn {
+    background: linear-gradient(135deg, var(--neon-gold), #ff8c00) !important;
+    color: var(--bg-dark) !important;
+    border: none !important;
+}
+
+.gold-btn:hover {
+    box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4) !important;
+}
+
+/* ==================== EMPTY STATES ==================== */
+.empty-state-archive {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+}
+
+.empty-state-archive i {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, var(--neon-gold), transparent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    opacity: 0.5;
+}
+
+.empty-state-archive h3 {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+}
+
+.empty-state-archive p {
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+/* ==================== SELECTION MODE ==================== */
+.selection-mode .folder-card {
+    padding-left: 50px;
+}
+
+.select-checkbox {
+    position: absolute;
+    left: 15px;
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--glass-border);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: transparent;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.select-checkbox.selected {
+    background: var(--neon-gold);
+    border-color: var(--neon-gold);
+    color: var(--bg-dark);
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+/* Staggered Animation Delays */
+.folder-card:nth-child(1) { animation-delay: 0.05s; }
+.folder-card:nth-child(2) { animation-delay: 0.1s; }
+.folder-card:nth-child(3) { animation-delay: 0.15s; }
+.folder-card:nth-child(4) { animation-delay: 0.2s; }
+.folder-card:nth-child(5) { animation-delay: 0.25s; }
+.folder-card:nth-child(6) { animation-delay: 0.3s; }
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 480px) {
+    .search-morph.active .search-morph-input {
+        width: 200px;
+    }
+    
+    .folder-card {
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        padding: 12px 15px;
+    }
+    
+    .folder-stats {
+        display: none;
+    }
+    
+    .alphabet-pill {
+        min-width: 32px;
+        height: 32px;
+        font-size: 0.8rem;
+    }
+}
