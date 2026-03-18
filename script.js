@@ -81,12 +81,12 @@ function initNavigation() {
     });
 }
 
-// ==================== SEARCH FUNCTIONALITY ====================
+// ==================== ENHANCED SEARCH WITH MORPH ANIMATION ====================
 function initSearch() {
+    // Portal page search (existing)
     const searchTrigger = document.querySelector('.search-trigger');
     const searchBox = document.getElementById('searchBox');
     const nameInput = document.getElementById('nameInput');
-    const archiveSearch = document.getElementById('archiveSearch');
 
     if (searchTrigger && searchBox) {
         searchTrigger.addEventListener('click', (e) => {
@@ -105,12 +105,168 @@ function initSearch() {
         });
     }
 
+    // Archive page morphing search
+    const searchMorph = document.getElementById('searchMorph');
+    const searchMorphBtn = document.getElementById('searchMorphBtn');
+    const archiveSearch = document.getElementById('archiveSearch');
+
+    if (searchMorphBtn && searchMorph) {
+        searchMorphBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            searchMorph.classList.toggle('active');
+            
+            if (searchMorph.classList.contains('active')) {
+                archiveSearch?.focus();
+                // Animate icon
+                searchMorphBtn.style.transform = 'rotate(90deg) scale(1.1)';
+                setTimeout(() => {
+                    searchMorphBtn.style.transform = '';
+                }, 300);
+            } else {
+                archiveSearch.value = '';
+                currentSearchTerm = '';
+                renderHistoryData(window.lastAttendanceData || {}, '');
+            }
+        });
+
+        // Close search when clicking outside
+        document.addEventListener('click', (e) => {
+            if (searchMorph?.classList.contains('active') && 
+                !searchMorph.contains(e.target) && 
+                !archiveSearch?.value) {
+                searchMorph.classList.remove('active');
+            }
+        });
+    }
+
     if (archiveSearch) {
         archiveSearch.addEventListener('input', (e) => {
             currentSearchTerm = e.target.value.toLowerCase();
             renderHistoryData(window.lastAttendanceData || {}, currentSearchTerm);
         });
+
+        // Prevent closing when typing
+        archiveSearch.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
     }
+}
+
+// ==================== ENHANCED HISTORY RENDERER ====================
+function renderHistoryData(data, searchTerm = "") {
+    const table = document.getElementById('historyTable');
+    const counter = document.getElementById('folderCounter');
+    const alphabetTrack = document.getElementById('alphabetTrack');
+    
+    if (!table) return;
+
+    // Group by student name
+    const albums = {};
+    Object.entries(data).forEach(([key, val]) => {
+        const name = val.studentName || "Unknown Student";
+        if (!albums[name]) {
+            albums[name] = { 
+                grade: val.grade || 'N/A', 
+                logs: [],
+                lastScan: null
+            };
+        }
+        albums[name].logs.push({ key, ...val });
+        
+        const scanTime = new Date(val.time || val.scannedAt || 0);
+        if (!albums[name].lastScan || scanTime > albums[name].lastScan) {
+            albums[name].lastScan = scanTime;
+        }
+    });
+
+    // Sort alphabetically
+    const sortedNames = Object.keys(albums).sort((a, b) => 
+        a.toLowerCase().localeCompare(b.toLowerCase())
+    );
+
+    // Update counter
+    if (counter) {
+        counter.textContent = `${sortedNames.length} folder${sortedNames.length !== 1 ? 's' : ''}`;
+    }
+
+    // Generate alphabet index
+    if (alphabetTrack) {
+        const letters = [...new Set(sortedNames.map(n => n[0].toUpperCase()))].sort();
+        alphabetTrack.innerHTML = letters.map(l => 
+            `<a href="#letter-${l}" class="alpha-pill" data-letter="${l}">${l}</a>`
+        ).join('');
+        
+        // Add click handlers for smooth scroll
+        alphabetTrack.querySelectorAll('.alpha-pill').forEach(pill => {
+            pill.addEventListener('click', (e) => {
+                e.preventDefault();
+                const letter = pill.getAttribute('data-letter');
+                const target = document.getElementById(`letter-${letter}`);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Highlight active
+                    alphabetTrack.querySelectorAll('.alpha-pill').forEach(p => p.classList.remove('active'));
+                    pill.classList.add('active');
+                }
+            });
+        });
+    }
+
+    // Filter by search
+    const filteredNames = sortedNames.filter(name => 
+        name.toLowerCase().includes(searchTerm)
+    );
+
+    if (filteredNames.length === 0) {
+        table.innerHTML = `
+            <div class="empty-state-archive">
+                <i class="fa-solid fa-folder-open"></i>
+                <h3>${searchTerm ? 'No matches found' : 'No student records'}</h3>
+                <p>${searchTerm ? 'Try a different search term' : 'Scanned data will appear here'}</p>
+            </div>
+        `;
+        return;
+    }
+
+    let currentLetter = '';
+    
+    table.innerHTML = filteredNames.map((name, index) => {
+        const student = albums[name];
+        const firstLetter = name[0].toUpperCase();
+        const showDivider = firstLetter !== currentLetter;
+        currentLetter = firstLetter;
+        
+        const lastScanDate = student.lastScan ? 
+            student.lastScan.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 
+            'Never';
+        
+        return `
+            ${showDivider ? `<div id="letter-${firstLetter}" class="letter-divider">${firstLetter}</div>` : ''}
+            <div class="folder-card" data-name="${name}" style="animation-delay: ${index * 0.05}s">
+                <div class="folder-icon-section">
+                    <div class="folder-icon-wrap">
+                        <i class="fa-solid fa-folder"></i>
+                        <span class="folder-count-badge">${student.logs.length}</span>
+                    </div>
+                    <div class="folder-info-compact">
+                        <div class="folder-name-text">${name}</div>
+                        <div class="folder-meta">
+                            <i class="fa-solid fa-calendar"></i> Last: ${lastScanDate}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="folder-stats">
+                    <span class="grade-pill">${student.grade}</span>
+                    <span class="scans-text">${student.logs.length} scan${student.logs.length !== 1 ? 's' : ''}</span>
+                </div>
+                
+                <button class="folder-view-btn" onclick="window.openFolder('${name}')" title="View Details">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        `;
+    }).join('');
 }
 
 // ==================== DATA LISTENERS (FIXED) ====================
