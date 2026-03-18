@@ -87,10 +87,10 @@ function renderTrash(data) {
                         <span class="trash-time">${formatTime(item.time || item.scannedAt)}</span>
                     </div>
                     <div class="trash-actions">
-                        <button class="restore-btn" onclick="window.restoreItem('${item.key}')" title="Restore">
+                        <button class="restore-btn" onclick="window.secureRestore('${item.key}')" title="Restore">
                             <i class="fa-solid fa-rotate-left"></i> Restore
                         </button>
-                        <button class="perm-delete-btn" onclick="window.permDelete('${item.key}')" title="Delete Forever">
+                        <button class="perm-delete-btn"onclick="window.securePermDelete('${item.key}')" title="Delete Forever">
                             <i class="fa-solid fa-ban"></i>
                         </button>
                     </div>
