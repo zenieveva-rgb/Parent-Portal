@@ -23,25 +23,23 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-let trashListener = null;
-let currentTrashData = {};
+// SINGLE LISTENER STATE
+let trashUnsubscribe = null;
+let trashDataCache = {};
 
-// ==================== TRASH LISTENER ====================
-function setupTrashListener() {
-    if (trashListener) {
-        off(ref(db, 'trash'), 'value', trashListener);
-    }
+function setupSingleTrashListener() {
+    if (trashUnsubscribe) return; // Prevent duplicates!
 
     const trashRef = ref(db, 'trash');
     
-    trashListener = onValue(trashRef, (snapshot) => {
-        const data = snapshot.val() || {};
-        currentTrashData = data;
-        renderTrash(data);
+    trashUnsubscribe = onValue(trashRef, (snapshot) => {
+        trashDataCache = snapshot.val() || {};
+        renderTrash(trashDataCache);
+    }, (error) => {
+        console.error("Trash listener error:", error);
     });
 }
 
-// ==================== RENDER TRASH ====================
 function renderTrash(data) {
     const table = document.getElementById('junkTable');
     const countEl = document.getElementById('trashCount');
@@ -65,7 +63,7 @@ function renderTrash(data) {
         return;
     }
 
-    // Group by student name for better organization
+    // Group by student name
     const grouped = {};
     entries.forEach(([key, item]) => {
         const name = item.studentName || 'Unknown';
@@ -102,16 +100,14 @@ function renderTrash(data) {
     `).join('');
 }
 
-// ==================== RESTORE FUNCTION ====================
 window.restoreItem = async (trashKey) => {
-    const item = currentTrashData[trashKey];
+    const item = trashDataCache[trashKey];
     if (!item) return;
 
     try {
         const updates = {};
         const originalKey = item.originalKey || push(ref(db, 'attendance')).key;
         
-        // Restore to attendance
         updates[`attendance/${originalKey}`] = {
             studentName: item.studentName,
             grade: item.grade,
@@ -120,7 +116,6 @@ window.restoreItem = async (trashKey) => {
             restoredAt: new Date().toISOString()
         };
         
-        // Remove from trash
         updates[`trash/${trashKey}`] = null;
         
         await update(ref(db), updates);
@@ -131,7 +126,6 @@ window.restoreItem = async (trashKey) => {
     }
 };
 
-// ==================== PERMANENT DELETE ====================
 window.permDelete = async (key) => {
     if (!confirm("⚠️ This will permanently delete this record. Continue?")) return;
     
@@ -143,7 +137,6 @@ window.permDelete = async (key) => {
     }
 };
 
-// ==================== EMPTY ALL ====================
 document.getElementById('emptyTrashBtn')?.addEventListener('click', async () => {
     if (!confirm("⚠️ WARNING: This will permanently delete ALL items in trash. Continue?")) return;
     if (!confirm("Are you absolutely sure? This cannot be undone.")) return;
@@ -156,12 +149,10 @@ document.getElementById('emptyTrashBtn')?.addEventListener('click', async () => 
     }
 });
 
-// ==================== NAVIGATION ====================
 document.getElementById('navToPortal')?.addEventListener('click', () => {
     window.location.href = 'index.html';
 });
 
-// ==================== UTILITIES ====================
 function formatDate(dateStr) {
     if (!dateStr) return 'Unknown';
     const d = new Date(dateStr);
@@ -188,12 +179,19 @@ function showToast(message, type = 'info') {
     `;
     document.body.appendChild(toast);
     
-    setTimeout(() => toast.classList.add('show'), 10);
+    requestAnimationFrame(() => toast.classList.add('show'));
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
 
+// Cleanup
+window.addEventListener('beforeunload', () => {
+    if (trashUnsubscribe) trashUnsubscribe();
+});
+
 // Initialize
-document.addEventListener('DOMContentLoaded', setupTrashListener);
+document.addEventListener('DOMContentLoaded', () => {
+    setupSingleTrashListener();
+});
