@@ -1,7 +1,16 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-import { getDatabase, ref, onValue, remove, update } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
+import { 
+    getDatabase, 
+    ref, 
+    onValue, 
+    off, 
+    remove, 
+    update, 
+    push,
+    get 
+} from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
 
-// 1. FIREBASE CONFIG
+// ==================== FIREBASE CONFIG ====================
 const firebaseConfig = {
     apiKey: "AIzaSyBdlEvDlQ1qWr8xdL4bV25NW4RgcTajYqM",
     authDomain: "database-98a70.firebaseapp.com",
@@ -15,141 +24,397 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// 2. STATE & CONSTANTS
-const ADMIN_PASSWORD = "1234"; 
+// ==================== STATE & CONSTANTS ====================
+const ADMIN_PASSWORD = "1234";
 let isSelectionMode = false;
 let selectedAlbums = new Set();
-let fullDataBuffer = {}; 
+let attendanceListener = null;
+let currentSearchTerm = "";
+let currentRestoreKey = null;
 
-// 3. UI ANIMATION HELPER
+// ==================== UTILITY FUNCTIONS ====================
 function animateIcon(element) {
     if (!element) return;
-    element.classList.add('icon-pop');
-    setTimeout(() => element.classList.remove('icon-pop'), 400);
+    element.style.transform = "scale(1.2)";
+    element.style.color = "var(--neon-cyan)";
+    setTimeout(() => {
+        element.style.transform = "scale(1)";
+        element.style.color = "";
+    }, 300);
 }
 
-// 4. NAVIGATION & UI EVENTS
-document.addEventListener('DOMContentLoaded', () => {
-    // Navigation Map
+function showToast(message, type = 'info') {
+    const existing = document.querySelector('.toast-notification');
+    if (existing) existing.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast-notification ${type}`;
+    toast.innerHTML = `
+        <i class="fa-solid ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+        <span>${message}</span>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// ==================== NAVIGATION ====================
+function initNavigation() {
     const routes = {
+        'navToPortal': 'index.html',
         'navToHistory': 'history.html',
-        'trashBinBtn': 'junk.html',
-        'navToPortal': 'index.html'
+        'trashBinBtn': 'junk.html'
     };
 
-    Object.keys(routes).forEach(id => {
+    Object.entries(routes).forEach(([id, url]) => {
         const btn = document.getElementById(id);
         if (btn) {
-            btn.onclick = (e) => {
+            btn.addEventListener('click', (e) => {
                 animateIcon(e.currentTarget);
-                // Delay jump so animation can be seen
-                setTimeout(() => window.location.href = routes[id], 250); 
-            };
+                setTimeout(() => window.location.href = url, 200);
+            });
         }
     });
+}
 
-    // Search Box Toggle Logic
+// ==================== SEARCH FUNCTIONALITY ====================
+function initSearch() {
     const searchTrigger = document.querySelector('.search-trigger');
     const searchBox = document.getElementById('searchBox');
     const nameInput = document.getElementById('nameInput');
+    const archiveSearch = document.getElementById('archiveSearch');
 
     if (searchTrigger && searchBox) {
-        searchTrigger.onclick = (e) => {
+        searchTrigger.addEventListener('click', (e) => {
             animateIcon(e.currentTarget);
             searchBox.classList.toggle('active');
-            if (searchBox.classList.contains('active')) nameInput?.focus();
-        };
+            if (searchBox.classList.contains('active') && nameInput) {
+                nameInput.focus();
+            }
+        });
     }
 
-    // Real-time search filter
-    nameInput?.addEventListener('input', (e) => processData(e.target.value.toLowerCase()));
-});
+    if (nameInput) {
+        nameInput.addEventListener('input', (e) => {
+            currentSearchTerm = e.target.value.toLowerCase();
+            renderPortalData(window.lastAttendanceData || {}, currentSearchTerm);
+        });
+    }
 
-// 5. DATA PROCESSING & RENDERING
-function processData(searchTerm = "") {
-    onValue(ref(db, 'attendance'), (snapshot) => {
-        const data = snapshot.val();
-        fullDataBuffer = data || {}; 
-        const portalTable = document.getElementById('attendanceTable'); 
-        const historyTable = document.getElementById('historyTable');   
+    if (archiveSearch) {
+        archiveSearch.addEventListener('input', (e) => {
+            currentSearchTerm = e.target.value.toLowerCase();
+            renderHistoryData(window.lastAttendanceData || {}, currentSearchTerm);
+        });
+    }
+}
+
+// ==================== DATA LISTENERS (FIXED) ====================
+function setupAttendanceListener() {
+    // Remove existing listener to prevent duplicates
+    if (attendanceListener) {
+        off(ref(db, 'attendance'), 'value', attendanceListener);
+    }
+
+    const attendanceRef = ref(db, 'attendance');
+    
+    attendanceListener = onValue(attendanceRef, (snapshot) => {
+        const data = snapshot.val() || {};
+        window.lastAttendanceData = data;
         
-        if (portalTable) {
-            portalTable.innerHTML = '';
-            Object.entries(fullDataBuffer)
-                .filter(([k, v]) => (v.studentName || "").toLowerCase().includes(searchTerm))
-                .reverse()
-                .forEach(([key, val]) => {
-                    const row = document.createElement('div');
-                    row.className = 'attendance-row';
-                    row.innerHTML = `
-                        <span>${val.studentName || 'Unknown Name'}</span>
-                        <span class="text-center">${val.grade || 'N/A'}</span>
-                        <span class="text-right">${val.time || val.scannedAt || '--:--'}</span>
-                    `;
-                    portalTable.appendChild(row);
-                });
+        // Update counter if on portal page
+        const counter = document.getElementById('scanCounter');
+        if (counter) {
+            const count = Object.keys(data).length;
+            counter.textContent = `${count} scan${count !== 1 ? 's' : ''} today`;
         }
 
-        if (historyTable) {
-            historyTable.innerHTML = '';
-            const albums = {};
-            Object.entries(fullDataBuffer).forEach(([key, val]) => {
-                const sName = val.studentName || "Unknown Student";
-                if (!albums[sName]) {
-                    albums[sName] = { grade: val.grade || 'N/A', logs: [] };
-                }
-                albums[sName].logs.push({ key, ...val });
-            });
-
-            Object.keys(albums)
-                .filter(n => n.toLowerCase().includes(searchTerm))
-                .forEach(name => {
-                    const studentLogs = albums[name].logs;
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'album-row-wrapper';
-                    wrapper.innerHTML = `
-                        <div class="student-album">
-                            <div class="album-icon"><i class="fa-solid fa-folder-open"></i></div>
-                            <div class="album-info-meta">
-                                <div class="album-name">${name}</div>
-                                <div class="album-sub">Grade: ${albums[name].grade}</div>
-                            </div>
-                            <div class="total-scans">${studentLogs.length} Logs</div>
-                        </div>`;
-                    
-                    wrapper.querySelector('.student-album').onclick = () => showPopUp(name, studentLogs);
-                    historyTable.appendChild(wrapper);
-                });
+        // Route to appropriate renderer
+        if (document.getElementById('attendanceTable')) {
+            renderPortalData(data, currentSearchTerm);
         }
+        if (document.getElementById('historyTable')) {
+            renderHistoryData(data, currentSearchTerm);
+        }
+    }, (error) => {
+        console.error("Database error:", error);
+        showToast("Connection error. Retrying...", "error");
     });
 }
 
-// 6. POPUP & DELETE LOGIC
-window.showPopUp = (name, logs) => {
-    const modal = document.getElementById('historyModal');
-    if (!modal) return;
-    document.getElementById('modalStudentName').innerText = name;
-    const list = document.getElementById('individualLogs');
-    list.innerHTML = '';
-    logs.forEach(log => {
-        const item = document.createElement('div');
-        item.className = 'attendance-row popup-grid';
-        item.innerHTML = `
-            <span>${log.scannedAt || log.time}</span>
-            <button class="delete-log-btn" style="background:none; border:none; color:white; cursor:pointer;">
-                <i class="fa-solid fa-trash"></i>
-            </button>`;
+// ==================== PORTAL RENDERER (Live Page) ====================
+function renderPortalData(data, searchTerm = "") {
+    const table = document.getElementById('attendanceTable');
+    if (!table) return;
+
+    const entries = Object.entries(data);
+    const filtered = entries.filter(([key, val]) => {
+        const name = (val.studentName || "").toLowerCase();
+        return name.includes(searchTerm);
+    }).reverse(); // Newest first
+
+    if (filtered.length === 0) {
+        table.innerHTML = `
+            <div class="empty-state">
+                <i class="fa-solid fa-inbox"></i>
+                <p>${searchTerm ? 'No matches found' : 'No scans yet'}</p>
+            </div>
+        `;
+        return;
+    }
+
+    table.innerHTML = filtered.map(([key, val]) => `
+        <div class="attendance-row scan-entry" data-key="${key}">
+            <div class="student-info-cell">
+                <div class="avatar-sm">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <span class="student-name">${val.studentName || 'Unknown'}</span>
+            </div>
+            <span class="grade-badge">${val.grade || 'N/A'}</span>
+            <span class="time-badge">
+                <i class="fa-regular fa-clock"></i>
+                ${formatTime(val.time || val.scannedAt)}
+            </span>
+        </div>
+    `).join('');
+
+    // Animate entries
+    setTimeout(() => {
+        document.querySelectorAll('.scan-entry').forEach((row, i) => {
+            setTimeout(() => row.classList.add('visible'), i * 50);
+        });
+    }, 10);
+}
+
+// ==================== HISTORY RENDERER (Alphabetical Folders) ====================
+function renderHistoryData(data, searchTerm = "") {
+    const table = document.getElementById('historyTable');
+    if (!table) return;
+
+    // Group by student name
+    const albums = {};
+    Object.entries(data).forEach(([key, val]) => {
+        const name = val.studentName || "Unknown Student";
+        if (!albums[name]) {
+            albums[name] = { 
+                grade: val.grade || 'N/A', 
+                logs: [],
+                lastScan: null
+            };
+        }
+        albums[name].logs.push({ key, ...val });
         
-        item.querySelector('button').onclick = (e) => {
-            animateIcon(e.currentTarget);
-            if (prompt("Admin Password:") === ADMIN_PASSWORD) {
-                remove(ref(db, `attendance/${log.key}`));
-            }
-        };
-        list.appendChild(item);
+        // Track latest scan
+        const scanTime = new Date(val.time || val.scannedAt || 0);
+        if (!albums[name].lastScan || scanTime > albums[name].lastScan) {
+            albums[name].lastScan = scanTime;
+        }
     });
+
+    // Sort alphabetically
+    const sortedNames = Object.keys(albums).sort((a, b) => 
+        a.toLowerCase().localeCompare(b.toLowerCase())
+    );
+
+    // Filter by search
+    const filteredNames = sortedNames.filter(name => 
+        name.toLowerCase().includes(searchTerm)
+    );
+
+    // Generate alphabet index
+    const alphabetDiv = document.getElementById('alphabetIndex');
+    if (alphabetDiv) {
+        const letters = [...new Set(sortedNames.map(n => n[0].toUpperCase()))].sort();
+        alphabetDiv.innerHTML = letters.map(l => 
+            `<a href="#letter-${l}" class="alpha-link">${l}</a>`
+        ).join('');
+    }
+
+    if (filteredNames.length === 0) {
+        table.innerHTML = `
+            <div class="empty-state">
+                <i class="fa-solid fa-folder-open"></i>
+                <p>${searchTerm ? 'No folders found' : 'No student records'}</p>
+            </div>
+        `;
+        return;
+    }
+
+    table.innerHTML = filteredNames.map((name, index) => {
+        const student = albums[name];
+        const firstLetter = name[0].toUpperCase();
+        const showLetter = index === 0 || 
+            filteredNames[index-1][0].toUpperCase() !== firstLetter;
+        
+        return `
+            ${showLetter ? `<div id="letter-${firstLetter}" class="letter-divider">${firstLetter}</div>` : ''}
+            <div class="folder-card" data-name="${name}">
+                <div class="folder-icon">
+                    <i class="fa-solid fa-folder"></i>
+                    <span class="log-count">${student.logs.length}</span>
+                </div>
+                <div class="folder-info">
+                    <h3 class="folder-name">${name}</h3>
+                    <span class="folder-grade"><i class="fa-solid fa-graduation-cap"></i> ${student.grade}</span>
+                    <span class="folder-date">Last: ${formatDate(student.lastScan)}</span>
+                </div>
+                <div class="folder-actions">
+                    <button class="view-btn" onclick="window.openFolder('${name}')">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// ==================== MODAL FUNCTIONS ====================
+window.openFolder = (name) => {
+    const data = window.lastAttendanceData || {};
+    const logs = Object.entries(data)
+        .filter(([k, v]) => v.studentName === name)
+        .map(([k, v]) => ({ key: k, ...v }))
+        .sort((a, b) => new Date(b.time || b.scannedAt) - new Date(a.time || a.scannedAt));
+
+    if (logs.length === 0) return;
+
+    const modal = document.getElementById('historyModal');
+    const nameEl = document.getElementById('modalStudentName');
+    const gradeEl = document.getElementById('modalStudentGrade');
+    const logsEl = document.getElementById('individualLogs');
+    const totalEl = document.getElementById('totalScans');
+    const lastEl = document.getElementById('lastScan');
+
+    if (!modal) return;
+
+    nameEl.textContent = name;
+    gradeEl.textContent = `Grade: ${logs[0].grade || 'N/A'}`;
+    totalEl.textContent = logs.length;
+    lastEl.textContent = formatTime(logs[0].time || logs[0].scannedAt);
+
+    logsEl.innerHTML = logs.map((log, i) => `
+        <div class="log-entry" style="animation-delay: ${i * 50}ms">
+            <div class="log-time">
+                <i class="fa-regular fa-clock"></i>
+                ${formatDateTime(log.time || log.scannedAt)}
+            </div>
+            <button class="delete-log-btn" onclick="window.deleteLog('${log.key}')" title="Move to Trash">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+        </div>
+    `).join('');
+
     modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('active'), 10);
 };
 
-// Start data fetching
-processData();
+window.deleteLog = async (key) => {
+    if (!confirm("Move this scan to trash?")) return;
+    
+    const entryRef = ref(db, `attendance/${key}`);
+    const snapshot = await get(entryRef);
+    const data = snapshot.val();
+    
+    if (data) {
+        // Move to trash first
+        const trashKey = push(ref(db, 'trash')).key;
+        await update(ref(db), {
+            [`trash/${trashKey}`]: {
+                ...data,
+                deletedAt: new Date().toISOString(),
+                originalKey: key
+            },
+            [`attendance/${key}`]: null
+        });
+        showToast("Moved to trash", "success");
+    }
+};
+
+// ==================== UTILITY FORMATTERS ====================
+function formatTime(timeStr) {
+    if (!timeStr) return '--:--';
+    const date = new Date(timeStr);
+    if (isNaN(date)) return timeStr;
+    return date.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+    });
+}
+
+function formatDate(date) {
+    if (!date) return 'Never';
+    const d = new Date(date);
+    if (isNaN(d)) return date;
+    return d.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+    });
+}
+
+function formatDateTime(dateStr) {
+    if (!dateStr) return '--';
+    const d = new Date(dateStr);
+    if (isNaN(d)) return dateStr;
+    return d.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    });
+}
+
+// ==================== INITIALIZATION ====================
+document.addEventListener('DOMContentLoaded', () => {
+    initNavigation();
+    initSearch();
+    setupAttendanceListener();
+    initModalHandlers();
+    initParticles();
+});
+
+function initModalHandlers() {
+    const modal = document.getElementById('historyModal');
+    const closeBtns = [
+        document.getElementById('closeModal'),
+        document.getElementById('closeModalBottom')
+    ];
+
+    closeBtns.forEach(btn => {
+        if (btn) {
+            btn.addEventListener('click', () => {
+                modal.classList.remove('active');
+                setTimeout(() => modal.style.display = 'none', 300);
+            });
+        }
+    });
+
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.style.display = 'none', 300);
+            }
+        });
+    }
+}
+
+function initParticles() {
+    const container = document.getElementById('particles');
+    if (!container) return;
+    
+    for (let i = 0; i < 20; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 5 + 's';
+        particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+        container.appendChild(particle);
+    }
+}
