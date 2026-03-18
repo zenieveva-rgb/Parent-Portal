@@ -3,44 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parent Portal | Live</title>
+    <title>Parent Portal | Live Monitor</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="animated-bg"></div>
+    <div class="particles" id="particles"></div>
 
     <div class="page-background">
         <div class="main-container">
+            <!-- Header -->
             <div class="glass-header">
-                <h1 class="portal-title">LIVE MONITOR</h1>
-                <div class="status-indicator">
-                    <span class="dot"></span> ACTIVE
+                <div class="header-content">
+                    <div class="live-indicator">
+                        <span class="pulse-dot"></span>
+                        <span class="live-text">LIVE</span>
+                    </div>
+                    <h1 class="portal-title neon-cyan">ATTENDANCE<span class="gold-accent">MONITOR</span></h1>
+                    <div class="scan-counter" id="scanCounter">0 scans today</div>
                 </div>
             </div>
 
+            <!-- Controls -->
             <div class="top-controls">
                 <div class="control-group">
-                    <i class="fa-solid fa-clock-rotate-left action-btn" id="navToHistory"></i>
-                    <i class="fa-solid fa-trash-can action-btn" id="trashBinBtn" style="color: var(--neon-red); margin-left: 15px;"></i>
+                    <button id="navToHistory" class="action-btn magnetic-btn" title="View Archive">
+                        <i class="fa-solid fa-box-archive"></i>
+                    </button>
+                    <button id="trashBinBtn" class="action-btn magnetic-btn danger" title="Trash Bin">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
                 </div>
 
-                <div class="search-box" id="searchBox">
-                    <input type="text" id="nameInput" placeholder="Search..." class="search-input">
-                    <i class="fa-solid fa-magnifying-glass search-trigger"></i>
+                <div class="search-container">
+                    <div class="search-box" id="searchBox">
+                        <input type="text" id="nameInput" placeholder="Search student..." class="search-input" autocomplete="off">
+                        <i class="fa-solid fa-magnifying-glass search-trigger"></i>
+                    </div>
                 </div>
             </div>
 
-            <div class="table-container">
+            <!-- Table -->
+            <div class="table-container glass-panel">
                 <div class="table-header">
-                    <span>NAME</span>
-                    <span style="text-align:center">GRADE</span>
-                    <span style="text-align:right">TIME</span>
+                    <span class="col-name">STUDENT NAME</span>
+                    <span class="col-grade">GRADE/SECTION</span>
+                    <span class="col-time">SCAN TIME</span>
                 </div>
-                <div class="attendance-list" id="attendanceTable"></div>
+                <div class="attendance-list" id="attendanceTable">
+                    <div class="empty-state">
+                        <i class="fa-solid fa-satellite-dish fa-bounce"></i>
+                        <p>Waiting for scans...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="portal-footer">
+                <span class="sync-status"><i class="fa-solid fa-wifi"></i> Connected to Firebase</span>
             </div>
         </div>
     </div>
+
     <script type="module" src="script.js"></script>
 </body>
 </html>
