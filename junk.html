@@ -3,29 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Junk Recovery</title>
+    <title>Parent Portal | Trash Recovery</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="animated-bg"></div>
+    <div class="particles" id="particles"></div>
 
     <div class="page-background">
         <div class="main-container">
-            <div class="glass-header">
-                <h1 class="portal-title" style="color:var(--neon-red)">TRASH BIN</h1>
+            <!-- Header -->
+            <div class="glass-header trash-header">
+                <h1 class="portal-title neon-red">TRASH <span class="white-text">RECOVERY</span></h1>
+                <div class="trash-info">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Items auto-delete after 30 days</span>
+                </div>
             </div>
 
+            <!-- Controls -->
             <div class="top-controls-container">
-                <button id="navToPortal" class="action-btn">BACK</button>
-                <button id="emptyTrashBtn" style="color:var(--neon-red); background:none; border:none; cursor:pointer;">EMPTY ALL</button>
+                <button id="navToPortal" class="action-btn back-btn">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </button>
+                
+                <div class="trash-actions">
+                    <span class="trash-count" id="trashCount">0 items</span>
+                    <button id="emptyTrashBtn" class="danger-btn pulse-danger">
+                        <i class="fa-solid fa-trash-arrow-up"></i> Empty All
+                    </button>
+                </div>
             </div>
 
-            <div class="attendance-list" id="junkTable"></div>
+            <!-- Trash List -->
+            <div class="attendance-list trash-list" id="junkTable">
+                <div class="empty-state">
+                    <i class="fa-regular fa-trash-can fa-3x"></i>
+                    <p>Trash is empty</p>
+                    <span class="sub-text">Deleted items will appear here</span>
+                </div>
+            </div>
         </div>
     </div>
-    
+
+    <!-- Restore Confirmation Modal -->
+    <div id="restoreModal" class="modal-overlay">
+        <div class="modal-content confirm-modal">
+            <div class="confirm-icon">
+                <i class="fa-solid fa-rotate-left"></i>
+            </div>
+            <h3>Restore Student Data?</h3>
+            <p>This will return all scan logs to the active database.</p>
+            <div class="confirm-actions">
+                <button id="cancelRestore" class="action-btn secondary">Cancel</button>
+                <button id="confirmRestore" class="action-btn success">Restore</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="junk-logic.js"></script>
-    <script type="module" src="script.js"></script> 
 </body>
 </html>
