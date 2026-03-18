@@ -23,12 +23,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// SINGLE LISTENER STATE
 let trashUnsubscribe = null;
 let trashDataCache = {};
 
 function setupSingleTrashListener() {
-    if (trashUnsubscribe) return; // Prevent duplicates!
+    if (trashUnsubscribe) return;
 
     const trashRef = ref(db, 'trash');
     
@@ -63,7 +62,6 @@ function renderTrash(data) {
         return;
     }
 
-    // Group by student name
     const grouped = {};
     entries.forEach(([key, item]) => {
         const name = item.studentName || 'Unknown';
@@ -90,7 +88,7 @@ function renderTrash(data) {
                         <button class="restore-btn" onclick="window.secureRestore('${item.key}')" title="Restore">
                             <i class="fa-solid fa-rotate-left"></i> Restore
                         </button>
-                        <button class="perm-delete-btn"onclick="window.securePermDelete('${item.key}')" title="Delete Forever">
+                        <button class="perm-delete-btn" onclick="window.securePermDelete('${item.key}')" title="Delete Forever">
                             <i class="fa-solid fa-ban"></i>
                         </button>
                     </div>
@@ -100,6 +98,7 @@ function renderTrash(data) {
     `).join('');
 }
 
+// Use secure functions from parent window
 window.restoreItem = async (trashKey) => {
     const item = trashDataCache[trashKey];
     if (!item) return;
@@ -126,29 +125,7 @@ window.restoreItem = async (trashKey) => {
     }
 };
 
-window.permDelete = async (key) => {
-    if (!confirm("⚠️ This will permanently delete this record. Continue?")) return;
-    
-    try {
-        await remove(ref(db, `trash/${key}`));
-        showToast("Permanently deleted", "success");
-    } catch (error) {
-        showToast("Delete failed", "error");
-    }
-};
-
-document.getElementById('emptyTrashBtn')?.addEventListener('click', async () => {
-    if (!confirm("⚠️ WARNING: This will permanently delete ALL items in trash. Continue?")) return;
-    if (!confirm("Are you absolutely sure? This cannot be undone.")) return;
-    
-    try {
-        await remove(ref(db, 'trash'));
-        showToast("Trash emptied", "success");
-    } catch (error) {
-        showToast("Operation failed", "error");
-    }
-});
-
+document.getElementById('emptyTrashBtn')?.addEventListener('click', window.secureEmptyTrash);
 document.getElementById('navToPortal')?.addEventListener('click', () => {
     window.location.href = 'index.html';
 });
@@ -186,12 +163,8 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// Cleanup
 window.addEventListener('beforeunload', () => {
     if (trashUnsubscribe) trashUnsubscribe();
 });
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    setupSingleTrashListener();
-});
+document.addEventListener('DOMContentLoaded', setupSingleTrashListener);
