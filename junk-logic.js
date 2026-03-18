@@ -1,5 +1,14 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-import { getDatabase, ref, onValue, remove, update } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
+import { 
+    getDatabase, 
+    ref, 
+    onValue, 
+    off, 
+    remove, 
+    update, 
+    get,
+    push 
+} from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBdlEvDlQ1qWr8xdL4bV25NW4RgcTajYqM",
@@ -13,39 +22,178 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const junkTable = document.getElementById('junkTable');
 
-onValue(ref(db, 'trash'), (snapshot) => {
-    const data = snapshot.val();
-    junkTable.innerHTML = '';
-    if (!data) {
-        junkTable.innerHTML = '<p style="text-align:center; padding:20px; opacity:0.5;">Trash is empty.</p>';
+let trashListener = null;
+let currentTrashData = {};
+
+// ==================== TRASH LISTENER ====================
+function setupTrashListener() {
+    if (trashListener) {
+        off(ref(db, 'trash'), 'value', trashListener);
+    }
+
+    const trashRef = ref(db, 'trash');
+    
+    trashListener = onValue(trashRef, (snapshot) => {
+        const data = snapshot.val() || {};
+        currentTrashData = data;
+        renderTrash(data);
+    });
+}
+
+// ==================== RENDER TRASH ====================
+function renderTrash(data) {
+    const table = document.getElementById('junkTable');
+    const countEl = document.getElementById('trashCount');
+    
+    if (!table) return;
+
+    const entries = Object.entries(data);
+    
+    if (countEl) {
+        countEl.textContent = `${entries.length} item${entries.length !== 1 ? 's' : ''}`;
+    }
+
+    if (entries.length === 0) {
+        table.innerHTML = `
+            <div class="empty-state">
+                <i class="fa-regular fa-trash-can fa-3x"></i>
+                <p>Trash is empty</p>
+                <span class="sub-text">Deleted items will appear here for 30 days</span>
+            </div>
+        `;
         return;
     }
-    Object.entries(data).forEach(([key, item]) => {
-        const row = document.createElement('div');
-        row.className = 'attendance-row history-grid';
-        row.innerHTML = `<span>${item.studentName}</span><span>${item.deletedAt}</span><div class="log-actions" style="display:flex; gap:10px;"><button onclick="restoreItem('${key}')" class="action-btn" style="color:#00ff88; background:none; border:none; cursor:pointer;"><i class="fa-solid fa-rotate-left"></i></button><button onclick="permDelete('${key}')" class="action-btn" style="color:#ff4d4d; background:none; border:none; cursor:pointer;"><i class="fa-solid fa-circle-xmark"></i></button></div>`;
-        junkTable.appendChild(row);
-    });
-});
 
-window.restoreItem = (trashKey) => {
-    onValue(ref(db, `trash/${trashKey}`), async (snapshot) => {
-        const entry = snapshot.val();
-        if (!entry) return;
+    // Group by student name for better organization
+    const grouped = {};
+    entries.forEach(([key, item]) => {
+        const name = item.studentName || 'Unknown';
+        if (!grouped[name]) grouped[name] = [];
+        grouped[name].push({ key, ...item });
+    });
+
+    table.innerHTML = Object.entries(grouped).map(([name, items]) => `
+        <div class="trash-group">
+            <div class="trash-group-header">
+                <span class="trash-name"><i class="fa-solid fa-user"></i> ${name}</span>
+                <span class="trash-badge">${items.length} scan${items.length !== 1 ? 's' : ''}</span>
+            </div>
+            ${items.map(item => `
+                <div class="trash-item">
+                    <div class="trash-info">
+                        <span class="trash-date">
+                            <i class="fa-regular fa-calendar"></i> 
+                            ${formatDate(item.deletedAt)}
+                        </span>
+                        <span class="trash-time">${formatTime(item.time || item.scannedAt)}</span>
+                    </div>
+                    <div class="trash-actions">
+                        <button class="restore-btn" onclick="window.restoreItem('${item.key}')" title="Restore">
+                            <i class="fa-solid fa-rotate-left"></i> Restore
+                        </button>
+                        <button class="perm-delete-btn" onclick="window.permDelete('${item.key}')" title="Delete Forever">
+                            <i class="fa-solid fa-ban"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `).join('');
+}
+
+// ==================== RESTORE FUNCTION ====================
+window.restoreItem = async (trashKey) => {
+    const item = currentTrashData[trashKey];
+    if (!item) return;
+
+    try {
         const updates = {};
-        entry.logs.forEach(log => {
-            const originalKey = log.originalKey;
-            const logData = { ...log };
-            delete logData.originalKey; 
-            updates[`attendance/${originalKey}`] = logData;
-        });
+        const originalKey = item.originalKey || push(ref(db, 'attendance')).key;
+        
+        // Restore to attendance
+        updates[`attendance/${originalKey}`] = {
+            studentName: item.studentName,
+            grade: item.grade,
+            time: item.time || item.scannedAt,
+            scannedAt: item.scannedAt || item.time,
+            restoredAt: new Date().toISOString()
+        };
+        
+        // Remove from trash
         updates[`trash/${trashKey}`] = null;
+        
         await update(ref(db), updates);
-        alert("Student data restored!");
-    }, { onlyOnce: true });
+        showToast(`Restored ${item.studentName}`, 'success');
+    } catch (error) {
+        console.error("Restore error:", error);
+        showToast("Failed to restore", "error");
+    }
 };
 
-window.permDelete = (key) => { if (confirm("Delete forever?")) remove(ref(db, `trash/${key}`)); };
-document.getElementById('emptyTrashBtn')?.addEventListener('click', () => { if (confirm("Clear entire trash bin?")) remove(ref(db, 'trash')); });
+// ==================== PERMANENT DELETE ====================
+window.permDelete = async (key) => {
+    if (!confirm("⚠️ This will permanently delete this record. Continue?")) return;
+    
+    try {
+        await remove(ref(db, `trash/${key}`));
+        showToast("Permanently deleted", "success");
+    } catch (error) {
+        showToast("Delete failed", "error");
+    }
+};
+
+// ==================== EMPTY ALL ====================
+document.getElementById('emptyTrashBtn')?.addEventListener('click', async () => {
+    if (!confirm("⚠️ WARNING: This will permanently delete ALL items in trash. Continue?")) return;
+    if (!confirm("Are you absolutely sure? This cannot be undone.")) return;
+    
+    try {
+        await remove(ref(db, 'trash'));
+        showToast("Trash emptied", "success");
+    } catch (error) {
+        showToast("Operation failed", "error");
+    }
+});
+
+// ==================== NAVIGATION ====================
+document.getElementById('navToPortal')?.addEventListener('click', () => {
+    window.location.href = 'index.html';
+});
+
+// ==================== UTILITIES ====================
+function formatDate(dateStr) {
+    if (!dateStr) return 'Unknown';
+    const d = new Date(dateStr);
+    if (isNaN(d)) return dateStr;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function formatTime(timeStr) {
+    if (!timeStr) return '--:--';
+    const d = new Date(timeStr);
+    if (isNaN(d)) return timeStr;
+    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+}
+
+function showToast(message, type = 'info') {
+    const existing = document.querySelector('.toast-notification');
+    if (existing) existing.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast-notification ${type}`;
+    toast.innerHTML = `
+        <i class="fa-solid ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+        <span>${message}</span>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', setupTrashListener);
