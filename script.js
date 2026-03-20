@@ -1,3 +1,154 @@
+// ==================== ACCESS CONTROL SYSTEM ====================
+const ACCESS_PASSWORD = "developer1245"; // Your password
+const SESSION_KEY = "portal_access_granted";
+
+// Check if already authenticated
+function checkAccess() {
+    const granted = sessionStorage.getItem(SESSION_KEY);
+    return granted === "true";
+}
+
+// Show password overlay
+function showPasswordOverlay() {
+    const overlay = document.getElementById('passwordOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        
+        const input = document.getElementById('accessPassword');
+        const toggleBtn = document.getElementById('toggleAccessPassword');
+        const submitBtn = document.getElementById('submitPassword');
+        const errorEl = document.getElementById('accessError');
+        
+        // Focus on input
+        setTimeout(() => input.focus(), 100);
+        
+        // Toggle password visibility
+        toggleBtn.onclick = () => {
+            const type = input.type === 'password' ? 'text' : 'password';
+            input.type = type;
+            toggleBtn.innerHTML = `<i class="fa-solid fa-eye${type === 'password' ? '' : '-slash'}"></i>`;
+        };
+        
+        // Submit password
+        submitBtn.onclick = () => {
+            const enteredPassword = input.value.trim();
+            
+            if (!enteredPassword) {
+                errorEl.textContent = 'Please enter password';
+                return;
+            }
+            
+            if (enteredPassword === ACCESS_PASSWORD) {
+                // Grant access
+                sessionStorage.setItem(SESSION_KEY, "true");
+                hidePasswordOverlay();
+                showToast("Access granted!", "success");
+                
+                // Initialize the rest of your app
+                initializeMainApp();
+            } else {
+                errorEl.textContent = 'Incorrect password';
+                input.value = '';
+                input.focus();
+                
+                // Shake animation for wrong password
+                input.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    input.style.animation = '';
+                }, 500);
+            }
+        };
+        
+        // Enter key support
+        input.onkeypress = (e) => {
+            if (e.key === 'Enter') {
+                submitBtn.click();
+            }
+        };
+    }
+}
+
+// Hide password overlay
+function hidePasswordOverlay() {
+    const overlay = document.getElementById('passwordOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+// Add shake animation to CSS
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+`;
+document.head.appendChild(style);
+
+// Initialize your main app separately
+function initializeMainApp() {
+    // Your existing initialization code goes here
+    console.log("Parent Portal Loaded");
+    initializeUI();
+    initializePassword();
+    startRealtimeListener();
+}
+
+// ==================== MODIFIED DOM LOADED ====================
+document.addEventListener('DOMContentLoaded', () => {
+    if (checkAccess()) {
+        // Already authenticated, initialize app directly
+        initializeMainApp();
+    } else {
+        // Show password prompt
+        showPasswordOverlay();
+        
+        // Hide the main content until authenticated
+        const mainContent = document.querySelector('.page-background');
+        if (mainContent) {
+            mainContent.style.display = 'none';
+        }
+    }
+});
+
+// ==================== TOAST FUNCTION (if not exists) ====================
+function showToast(message, type = "info") {
+    // Remove existing toasts
+    const existing = document.querySelector('.toast-notification');
+    if (existing) existing.remove();
+    
+    // Create toast
+    const toast = document.createElement('div');
+    toast.className = `toast-notification ${type}`;
+    toast.innerHTML = `
+        <i class="fa-solid fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+        <span>${message}</span>
+    `;
+    
+    // Add styles if not exists
+    if (!document.querySelector('#toast-styles')) {
+        const style = document.createElement('style');
+        style.id = 'toast-styles';
+        style.textContent = `
+            .toast-notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: white;
+                padding: 15px 20px;
+                border-radius: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+                min-width: 250px;
+            }
+            .toast-notification.success {
+                background: #4CAF50;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
 import { 
     getDatabase, 
