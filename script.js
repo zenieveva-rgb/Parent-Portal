@@ -40,7 +40,10 @@ const auth = getAuth(app);
 const SECURITY = {
     ADMIN_EMAIL: "depeddcp11@gmail.com",  // Your recovery email
     DELETE_PASSWORD: "Admin123!",         // Default password
-    PASSWORD_STORAGE_PATH: "systemConfig/deletePassword"  // Where password is stored
+    PASSWORD_HASH_PATH: "systemConfig/deletePassword",  // Where password hash is stored
+    SESSION_TIMEOUT: 30 * 60 * 1000,     // 30 minutes in milliseconds
+    MAX_ATTEMPTS: 5,                      // Max failed attempts before lockout
+    LOCKOUT_TIME: 5 * 60 * 1000          // 5 minutes lockout in milliseconds
 };
 
 // ==================== GLOBAL STATE ====================
@@ -881,4 +884,3 @@ document.addEventListener('DOMContentLoaded', () => {
     setupDataListener();
     initializeSecurity(); // Initialize security system
 });
-
