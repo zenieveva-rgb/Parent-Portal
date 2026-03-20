@@ -8,32 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- PASSWORD PROTECTION OVERLAY -->
-<div id="passwordOverlay" class="password-overlay">
-    <div class="password-container">
-        <div class="password-logo">
-            <i class="fa-solid fa-shield-halved"></i>
-        </div>
-        <h1 class="password-title">Parent Portal Access</h1>
-        <p class="password-subtitle">Enter password to access the attendance monitor</p>
-        
-        <div class="password-input-group">
-            <input type="password" id="accessPassword" class="password-input" 
-                   placeholder="Enter access password..." autocomplete="off">
-            <button id="toggleAccessPassword" class="password-toggle" type="button">
-                <i class="fa-solid fa-eye"></i>
-            </button>
-        </div>
-        
-        <div id="accessError" class="password-error"></div>
-        
-        <button id="submitPassword" class="password-btn">
-            <i class="fa-solid fa-lock-open"></i> Access Portal
-        </button>
-        
-        <p class="password-hint">Contact administrator if you forgot the password</p>
-    </div>
-</div>
     <!-- SECURITY MODALS - PASTE AT TOP OF BODY -->
     <!-- Password Protection Modal -->
     <div id="passwordModal" class="security-modal">
