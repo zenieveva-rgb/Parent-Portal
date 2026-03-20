@@ -852,70 +852,12 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeSecurity(); // Initialize security system
 });
 
-// ==================== PASSWORD PROTECTION ====================
-let targetUrl = ''; // Store where user wants to go
-
-// Password protection for specific pages
-const PROTECTED_PAGES = ['junk.html', 'history.html', 'trash.html', 'archive.html'];
-const CORRECT_PASSWORD = 'parentporta'; // Change this to your desired password
-
-// Function to show password modal
-function showPasswordModal(url) {
-    targetUrl = url;
-    const modal = document.getElementById('passwordModal');
-    const passwordInput = document.getElementById('passwordInput');
-    const errorMsg = document.getElementById('passwordError');
-    
-    modal.classList.add('active');
-    passwordInput.value = '';
-    errorMsg.style.display = 'none';
-    passwordInput.focus();
-}
-
-// Function to hide password modal
-function hidePasswordModal() {
-    const modal = document.getElementById('passwordModal');
-    modal.classList.remove('active');
-}
-
-// Function to check password
-function checkPassword() {
-    const passwordInput = document.getElementById('passwordInput');
-    const errorMsg = document.getElementById('passwordError');
-    const enteredPassword = passwordInput.value;
-    
-    if (enteredPassword === CORRECT_PASSWORD) {
-        // Password is correct - redirect to target page
-        window.location.href = targetUrl;
-    } else {
-        // Password is incorrect - show error
-        errorMsg.style.display = 'block';
-        passwordInput.value = '';
-        passwordInput.focus();
-    }
-}
-
-// Add click event to password-protected links
-document.addEventListener('DOMContentLoaded', function() {
-    // Find all links to protected pages
-    document.querySelectorAll('a').forEach(link => {
-        const href = link.getAttribute('href');
-        
-        if (href && PROTECTED_PAGES.some(page => href.includes(page))) {
-            link.addEventListener('click', function(e) {
-                e.preventDefault(); // Prevent normal navigation
-                showPasswordModal(href); // Show password modal instead
-            });
-        }
-    });
-    
-    // Setup modal buttons
-    const submitBtn = document.getElementById('submitBtn');
-    const cancelBtn = document.getElementById('cancelBtn');
-    const passwordInput = document.getElementById('passwordInput');
-    const passwordToggle = document.getElementById('passwordToggle');
-    
-    if (submitBtn) {
-        submitBtn.addEventListener('click', checkPassword);
-    }
-    
+// ==================== SECURITY CONFIG ====================
+const SECURITY = {
+    ADMIN_EMAIL: "depeddcp11@gmail.com",  // Your recovery email
+    DELETE_PASSWORD: "Admin123!",         // Default password
+    PASSWORD_HASH_PATH: "systemConfig/deletePassword",  // Where password hash is stored
+    SESSION_TIMEOUT: 30 * 60 * 1000,     // 30 minutes in milliseconds
+    MAX_ATTEMPTS: 5,                      // Max failed attempts before lockout
+    LOCKOUT_TIME: 5 * 60 * 1000          // 5 minutes lockout in milliseconds
+};
