@@ -1858,3 +1858,65 @@ body, html {
 
 .password-modal-icon {
     font-size: 
+/* Toast Notifications */
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px 20px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 9999;
+    opacity: 0;
+    transform: translateX(100px);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    max-width: 350px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.toast-notification.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast-notification.success {
+    border-left: 4px solid #4CAF50;
+}
+
+.toast-notification.error {
+    border-left: 4px solid #F44336;
+}
+
+.toast-notification.warning {
+    border-left: 4px solid #FF9800;
+}
+
+.toast-notification.info {
+    border-left: 4px solid #2196F3;
+}
+
+.toast-notification i {
+    font-size: 20px;
+}
+
+.toast-notification.success i {
+    color: #4CAF50;
+}
+
+.toast-notification.error i {
+    color: #F44336;
+}
+
+.toast-notification.warning i {
+    color: #FF9800;
+}
+
+.toast-notification.info i {
+    color: #2196F3;
+}
