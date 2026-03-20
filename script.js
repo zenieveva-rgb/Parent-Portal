@@ -361,20 +361,50 @@ async function executeDelete(action) {
 
 // ==================== RESTORE ITEM ====================
 async function restoreItem(trashKey) {
-    const snapshot = await get(ref(db, `trash/${trashKey}`));
-    const entry = snapshot.val();
-    if (!entry) return;
+    try {
+        const trashRef = ref(db, `trash/${trashKey}`);
+        const snapshot = await get(trashRef);
+        const entry = snapshot.val();
+        
+        if (!entry) {
+            showToast("Entry not found in trash", "error");
+            return;
+        }
 
-    const updates = {};
-    entry.logs.forEach(log => {
-        const originalKey = log.originalKey;
-        const logData = { ...log };
-        delete logData.originalKey; 
-        updates[`attendance/${originalKey}`] = logData;
-    });
-    updates[`trash/${trashKey}`] = null;
-    await update(ref(db), updates);
-    showToast("Student data restored!", "success");
+        const updates = {};
+        
+        // Check if it's a single log or student data
+        if (entry.logs && Array.isArray(entry.logs)) {
+            // Student data with multiple logs
+            entry.logs.forEach(log => {
+                if (log.originalKey) {
+                    const logData = { ...log };
+                    delete logData.originalKey;
+                    updates[`attendance/${log.originalKey}`] = logData;
+                }
+            });
+        } else {
+            // Single log entry
+            const logData = { ...entry };
+            delete logData.originalKey;
+            if (entry.originalKey) {
+                updates[`attendance/${entry.originalKey}`] = logData;
+            } else {
+                // Generate new key if originalKey doesn't exist
+                const newKey = push(ref(db, 'attendance')).key;
+                updates[`attendance/${newKey}`] = logData;
+            }
+        }
+        
+        // Remove from trash
+        updates[`trash/${trashKey}`] = null;
+        
+        await update(ref(db), updates);
+        showToast("Successfully restored!", "success");
+    } catch (error) {
+        console.error("Restore error:", error);
+        showToast("Failed to restore item", "error");
+    }
 }
 
 // ==================== PUBLIC SECURE DELETE API ====================
@@ -852,12 +882,3 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeSecurity(); // Initialize security system
 });
 
-// ==================== SECURITY CONFIG ====================
-const SECURITY = {
-    ADMIN_EMAIL: "depeddcp11@gmail.com",  // Your recovery email
-    DELETE_PASSWORD: "Admin123!",         // Default password
-    PASSWORD_HASH_PATH: "systemConfig/deletePassword",  // Where password hash is stored
-    SESSION_TIMEOUT: 30 * 60 * 1000,     // 30 minutes in milliseconds
-    MAX_ATTEMPTS: 5,                      // Max failed attempts before lockout
-    LOCKOUT_TIME: 5 * 60 * 1000          // 5 minutes lockout in milliseconds
-};
