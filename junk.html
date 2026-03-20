@@ -8,6 +8,28 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+     <!-- Password Modal -->
+<div class="password-modal" id="passwordModal">
+    <div class="password-modal-content">
+        <div class="password-modal-icon">🔒</div>
+        <h2>Access Restricted</h2>
+        <p>Enter password to access this section</p>
+        
+        <div class="password-input-group">
+            <input type="password" id="passwordInput" placeholder="Enter password">
+            <span class="password-toggle" id="passwordToggle">👁️</span>
+        </div>
+        
+        <div class="password-buttons">
+            <button class="btn btn-cancel" id="cancelBtn">Cancel</button>
+            <button class="btn btn-submit" id="submitBtn">Submit</button>
+        </div>
+        
+        <p class="password-error" id="passwordError" style="color: red; display: none;">
+            Incorrect password!
+        </p>
+    </div>
+</div>
     <!-- SECURITY MODALS - PASTE AT TOP OF BODY -->
     <!-- Password Protection Modal -->
     <div id="passwordModal" class="security-modal">
