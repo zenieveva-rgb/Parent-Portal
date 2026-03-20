@@ -36,13 +36,11 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-// ==================== SECURITY CONFIGURATION ====================
+// ==================== SECURITY CONFIG ====================
 const SECURITY = {
-    ADMIN_EMAIL: "depeddcp11@gmail.com",
-    PASSWORD_HASH_PATH: "systemConfig/adminPasswordHash",
-    SESSION_TIMEOUT: 30 * 60 * 1000, // 30 minutes
-    MAX_ATTEMPTS: 3,
-    LOCKOUT_TIME: 5 * 60 * 1000 // 5 minutes
+    ADMIN_EMAIL: "depeddcp11@gmail.com",  // Your recovery email
+    DELETE_PASSWORD: "Admin123!",         // Default password
+    PASSWORD_STORAGE_PATH: "systemConfig/deletePassword"  // Where password is stored
 };
 
 // ==================== GLOBAL STATE ====================
